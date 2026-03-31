@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Méthode d'Euler - Famille de Primitives</title>
+    
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .intro {
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .panel {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .controls {
+            flex: 1 1 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        input[type="number"] { width: 70px; padding: 5px; }
+        input[type="text"] { width: 150px; padding: 5px; }
+        button {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #2980b9; }
+        .data-panel {
+            flex: 1;
+            min-width: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .canvas-panel {
+            flex: 2;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background-color: #f8f9fa; position: sticky; top: 0; }
+        canvas {
+            border: 1px solid #bdc3c7;
+            background-color: #fff;
+            margin-top: 10px;
+            max-width: 100%;
+        }
+        .error { color: #e74c3c; font-weight: bold; margin-top: 10px; text-align: center;}
+    </style>
+</head>
+<body>
+
+    <h1>Méthode d'Euler : Famille de primitives</h1>
+    
+    <div class="intro">
+        <p>Cette application permet de construire une approximation des fonctions $F$, primitives d'une fonction $f$, sur un intervalle $[a; b]$.</p>
+        <p>En renseignant plusieurs valeurs pour la constante $c$ (telles que $F(a) = c$), vous observerez que les différentes primitives diffèrent toutes d'une constante.</p>
+    </div>
+
+    <div class="panel controls">
+        <div class="control-group">
+            <label for="func">$f(x) =$</label>
+            <input type="text" id="func" value="x" placeholder="Ex: x, sin(x), x^2-1">
+        </div>
+        <div class="control-group">
+            <label for="a">$a =$</label>
+            <input type="number" id="a" value="0" step="any">
+        </div>
+        <div class="control-group">
+            <label for="b">$b =$</label>
+            <input type="number" id="b" value="5" step="any">
+        </div>
+        <div class="control-group">
+            <label for="h">$h =$</label>
+            <input type="number" id="h" value="0.5" step="any">
+        </div>
+        <div class="control-group">
+            <label for="c" title="Séparez les valeurs par des virgules">Valeurs de $c$ :</label>
+            <input type="text" id="c" value="-2, -1, 0, 1, 2" style="width: 120px;">
+        </div>
+        <button onclick="executerEuler()">Calculer et Tracer</button>
+    </div>
+    
+    <div id="error-msg" class="error"></div>
+
+    <div class="container">
+        <div class="panel data-panel">
+            <h3>Tableau de valeurs</h3>
+            <table id="result-table">
+                <thead id="table-head">
+                    </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+        <div class="panel canvas-panel">
+            <h3>Tracés sur $[a; b]$</h3>
+            <canvas id="plotCanvas" width="600" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Palette de couleurs pour les différentes courbes
+        const couleurs = ['#2980b9', '#e74c3c', '#27ae60', '#8e44ad', '#f39c12', '#16a085', '#d35400', '#2c3e50'];
+
+        function arrondir(valeur, decimales = 4) {
+            const facteur = Math.pow(10, decimales);
+            return Math.round(valeur * facteur) / facteur;
+        }
+
+        function executerEuler() {
+            const errorMsg = document.getElementById('error-msg');
+            const tableHead = document.getElementById('table-head');
+            const tableBody = document.querySelector('#result-table tbody');
+            const canvas = document.getElementById('plotCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            errorMsg.innerHTML = '';
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const funcStr = document.getElementById('func').value;
+            const a = parseFloat(document.getElementById('a').value);
+            const b = parseFloat(document.getElementById('b').value);
+            const h = parseFloat(document.getElementById('h').value);
+            const cStr = document.getElementById('c').value;
+
+            // Extraction des valeurs de c
+            const cValues = cStr.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+
+            if (cValues.length === 0) {
+                errorMsg.innerText = "Erreur : Veuillez entrer au moins une valeur numérique pour 'c' (ex: 1, 2, 3).";
+                return;
+            }
+            if (h <= 0) {
+                errorMsg.innerText = "Erreur : Le pas 'h' doit être strictement positif.";
+                return;
+            }
+            if (a >= b) {
+                errorMsg.innerText = "Erreur : La borne 'a' doit être strictement inférieure à la borne 'b'.";
+                return;
+            }
+
+            let compileFunc;
+            try {
+                compileFunc = math.compile(funcStr);
+            } catch (err) {
+                errorMsg.innerText = "Erreur de syntaxe dans la fonction f(x).";
+                return;
+            }
+
+            // Préparation des en-têtes du tableau
+            let theadHtml = '<tr><th>$x_n$</th>';
+            cValues.forEach((cVal, index) => {
+                const color = couleurs[index % couleurs.length];
+                theadHtml += `<th style="color: ${color};">$F_{${index+1}}(x_n)$</th>`;
+            });
+            theadHtml += '</tr>';
+            tableHead.innerHTML = theadHtml;
+
+            // Initialisation des données
+            const toutesLesCourbes = cValues.map(() => []); // Un tableau par courbe
+            let x = a;
+            let valeursF = [...cValues]; // Valeurs actuelles de F pour chaque c
+            const limite = b + (h / 10); 
+
+            // Boucle principale d'Euler
+            while (x <= limite) {
+                const tr = document.createElement('tr');
+                let rowHtml = `<td>${arrondir(x)}</td>`;
+
+                // Enregistrer les points et créer la ligne du tableau
+                valeursF.forEach((F, i) => {
+                    toutesLesCourbes[i].push({ x: x, F: F });
+                    rowHtml += `<td style="color: ${couleurs[i % couleurs.length]}; font-weight: bold;">${arrondir(F)}</td>`;
+                });
+
+                tr.innerHTML = rowHtml;
+                tableBody.appendChild(tr);
+
+                try {
+                    // f(x) est la même pour toutes les primitives à une abscisse donnée
+                    const fx = compileFunc.evaluate({ x: x });
+                    
+                    // Mise à jour de toutes les valeurs de F (Euler)
+                    valeursF = valeursF.map(F => F + fx * h);
+                    x = x + h;
+                } catch (err) {
+                    errorMsg.innerText = "Erreur lors de l'évaluation de la fonction.";
+                    return;
+                }
+            }
+
+            tracerGraphique(ctx, canvas, toutesLesCourbes, a, b);
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        // Fonction pour déterminer le pas idéal du quadrillage
+        function calculerPas(range) {
+            const d = Math.pow(10, Math.floor(Math.log10(range)));
+            if (range / d < 2) return d / 5;
+            if (range / d < 5) return d / 2;
+            return d;
+        }
+
+        function tracerGraphique(ctx, canvas, toutesLesCourbes, a, b) {
+            const padding = 45;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const minX = a;
+            const maxX = b;
+            
+            // Trouver le min et max global parmi TOUTES les courbes
+            let minF = Infinity;
+            let maxF = -Infinity;
+            toutesLesCourbes.forEach(courbe => {
+                courbe.forEach(p => {
+                    if (p.F < minF) minF = p.F;
+                    if (p.F > maxF) maxF = p.F;
+                });
+            });
+            
+            if (minF > 0 && minF - maxF * 0.2 <= 0) minF = 0;
+            if (maxF < 0 && maxF - minF * 0.2 >= 0) maxF = 0;
+
+            const margeY = (maxF - minF) * 0.1 || 1;
+            minF -= margeY;
+            maxF += margeY;
+
+            const rangeX = maxX - minX || 1;
+            const rangeF = maxF - minF || 1;
+
+            function coordToPixel(x, y) {
+                const px = padding + ((x - minX) / rangeX) * (width - 2 * padding);
+                const py = height - padding - ((y - minF) / rangeF) * (height - 2 * padding);
+                return { px, py };
+            }
+
+            // 1. Tracer le quadrillage
+            const stepX = calculerPas(rangeX);
+            const stepF = calculerPas(rangeF);
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#ecf0f1';
+            ctx.lineWidth = 1;
+
+            for (let x = Math.ceil(minX / stepX) * stepX; x <= maxX; x += stepX) {
+                const px = coordToPixel(x, 0).px;
+                ctx.moveTo(px, padding - 10);
+                ctx.lineTo(px, height - padding);
+            }
+            for (let y = Math.ceil(minF / stepF) * stepF; y <= maxF; y += stepF) {
+                const py = coordToPixel(0, y).py;
+                ctx.moveTo(padding, py);
+                ctx.lineTo(width - padding + 10, py);
+            }
+            ctx.stroke();
+
+            // 2. Tracer les axes avec flèches
+            ctx.beginPath();
+            ctx.strokeStyle = '#34495e';
+            ctx.fillStyle = '#34495e';
+            ctx.lineWidth = 1.5;
+
+            const yAxeX = (minF <= 0 && maxF >= 0) ? 0 : minF;
+            const xAxeY = (minX <= 0 && maxX >= 0) ? 0 : minX;
+
+            const axeX_py = coordToPixel(0, yAxeX).py;
+            const axeY_px = coordToPixel(xAxeY, 0).px;
+
+            // Axe X
+            ctx.moveTo(padding, axeX_py);
+            ctx.lineTo(width - padding + 10, axeX_py);
+            ctx.stroke();
+            // Flèche Axe X
+            ctx.beginPath();
+            ctx.moveTo(width - padding + 18, axeX_py);
+            ctx.lineTo(width - padding + 8, axeX_py - 4);
+            ctx.lineTo(width - padding + 8, axeX_py + 4);
+            ctx.fill();
+
+            // Axe Y
+            ctx.beginPath();
+            ctx.moveTo(axeY_px, height - padding);
+            ctx.lineTo(axeY_px, padding - 10);
+            ctx.stroke();
+            // Flèche Axe Y
+            ctx.beginPath();
+            ctx.moveTo(axeY_px, padding - 18);
+            ctx.lineTo(axeY_px - 4, padding - 8);
+            ctx.lineTo(axeY_px + 4, padding - 8);
+            ctx.fill();
+
+            // 3. Tracer les courbes et les points
+            toutesLesCourbes.forEach((courbe, index) => {
+                const couleur = couleurs[index % couleurs.length];
+                
+                // Lignes
+                ctx.beginPath();
+                ctx.strokeStyle = couleur;
+                ctx.lineWidth = 2;
+                courbe.forEach((p, i) => {
+                    const coords = coordToPixel(p.x, p.F);
+                    if (i === 0) {
+                        ctx.moveTo(coords.px, coords.py);
+                    } else {
+                        ctx.lineTo(coords.px, coords.py);
+                    }
+                });
+                ctx.stroke();
+
+                // Points
+                ctx.fillStyle = couleur;
+                courbe.forEach(p => {
+                    const coords = coordToPixel(p.x, p.F);
+                    ctx.beginPath();
+                    ctx.arc(coords.px, coords.py, 3.5, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            });
+        }
+
+        window.onload = executerEuler;
+    </script>
+</body>
+</html>

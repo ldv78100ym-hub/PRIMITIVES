@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion de Primitives - 1ère STI2D</title>
+    
+    
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: var(--primary-color);
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+        }
+        .bo-section {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--secondary-color);
+        }
+        .theorem {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        .comment {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 10px;
+        }
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #bdc3c7;
+            background-color: #fff;
+            max-width: 100%;
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        button, select, input {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #1c5980;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-box {
+            width: 15px; height: 15px; border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Notion de Primitives</h1>
+
+    <div class="bo-section">
+        <h2>1. Définition et Propriétés</h2>
+        <p>Soit \( f \) une fonction définie sur un intervalle \( I \). Une <strong>primitive</strong> de \( f \) sur \( I \) est une fonction \( F \), dérivable sur \( I \), telle que pour tout \( x \in I \) :</p>
+        <div style="text-align: center; font-size: 1.2em;">
+            \[ F'(x) = f(x) \]
+        </div>
+
+        <div class="theorem">
+            <strong>Théorème :</strong> Deux primitives d'une même fonction sur un intervalle diffèrent d'une constante.
+        </div>
+        
+        <p class="comment">
+            <strong>Argument cinématique :</strong> Si l'on considère la vitesse \( v(t) = x'(t) \) d'un mobile, une fonction dont la dérivée (la vitesse) est identiquement nulle correspond à un mobile à l'arrêt, sa position \( x(t) \) est donc constante.<br>
+            <strong>Argument géométrique :</strong> Deux fonctions ayant en tout point le même nombre dérivé ont des tangentes parallèles en chaque point ; leurs courbes représentatives sont donc "parallèles", l'une s'obtenant à partir de l'autre par une translation verticale.
+        </p>
+    </div>
+
+    <div class="bo-section">
+        <h2>2. Primitives Usuelles</h2>
+        <p>Il est attendu de savoir calculer les primitives d'un polynôme, ainsi que celles de fonctions trigonométriques spécifiques :</p>
+        <ul>
+            <li><strong>Polynômes :</strong> La primitive de \( t \mapsto t^n \) (avec \( n \neq -1 \)) est \( t \mapsto \dfrac{t^{n+1}}{n+1} + C \).</li>
+            <li><strong>Fonctions sinusoïdales :</strong> 
+                <ul>
+                    <li>Si \( f(t) = A \cos(\omega t + \varphi) \), alors ses primitives sont de la forme \( F(t) = \dfrac{A}{\omega} \sin(\omega t + \varphi) + C \).</li>
+                    <li>Si \( f(t) = A \sin(\omega t + \varphi) \), alors ses primitives sont de la forme \( F(t) = -\dfrac{A}{\omega} \cos(\omega t + \varphi) + C \).</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="bo-section">
+        <h2>3. Calcul approché par la méthode d'Euler</h2>
+        <p>La méthode d'Euler permet de construire point par point une approximation de la courbe représentative de la solution d'un problème de Cauchy du type : \( y' = f(t) \) et \( y(t_0) = y_0 \).</p>
+        <p>Elle est particulièrement utile lorsque l'expression explicite de la primitive n'est pas connue. L'algorithme repose sur l'approximation affine locale :</p>
+        <div style="text-align: center;">
+            \[ y(t + \Delta t) \approx y(t) + y'(t) \cdot \Delta t = y(t) + f(t) \cdot \Delta t \]
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <h3>Simulation algorithmique : Méthode d'Euler</h3>
+        <p>Approximation de la primitive de \( f(t) = \dfrac{1}{1+t^2} \) avec la condition initiale \( y(0) = 0 \).</p>
+        
+        <canvas id="eulerCanvas" width="700" height="400"></canvas>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="color-box" style="background: var(--accent-color);"></div> Solution approchée (Euler)</div>
+            <div class="legend-item"><div class="color-box" style="background: #27ae60;"></div> Solution exacte (Arctangente)</div>
+        </div>
+
+        <div class="controls">
+            <label for="stepSize">Pas de temps (\( \Delta t \)) :</label>
+            <select id="stepSize">
+                <option value="1">1.0</option>
+                <option value="0.5" selected>0.5</option>
+                <option value="0.2">0.2</option>
+                <option value="0.1">0.1</option>
+                <option value="0.05">0.05</option>
+            </select>
+            <button id="drawBtn">Tracer l'approximation</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('eulerCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Dimensions du graphique
+        const width = canvas.width;
+        const height = canvas.height;
+        const margin = 50;
+        
+        // Plages d'affichage
+        const tMax = 5;
+        const yMax = 2; // arctan(x) plafonne à pi/2 approx 1.57
+
+        // Fonction dérivée f(t) = 1 / (1 + t^2)
+        function f(t) {
+            return 1 / (1 + t * t);
+        }
+
+        // Solution exacte (primitive connue : arctan(t))
+        function exactSolution(t) {
+            return Math.atan(t);
+        }
+
+        // Fonctions de conversion coordonnées (mathématiques vers pixels canvas)
+        function getX(t) {
+            return margin + (t / tMax) * (width - 2 * margin);
+        }
+
+        function getY(y) {
+            return height - margin - (y / yMax) * (height - 2 * margin);
+        }
+
+        function drawAxes() {
+            ctx.clearRect(0, 0, width, height);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            
+            // Axe Y
+            ctx.moveTo(getX(0), getY(0));
+            ctx.lineTo(getX(0), margin - 20);
+            
+            // Axe X
+            ctx.moveTo(getX(0), getY(0));
+            ctx.lineTo(width - margin + 20, getY(0));
+            ctx.stroke();
+
+            // Flèches
+            ctx.beginPath();
+            ctx.moveTo(getX(0) - 5, margin - 10);
+            ctx.lineTo(getX(0), margin - 20);
+            ctx.lineTo(getX(0) + 5, margin - 10);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(width - margin + 10, getY(0) - 5);
+            ctx.lineTo(width - margin + 20, getY(0));
+            ctx.lineTo(width - margin + 10, getY(0) + 5);
+            ctx.fill();
+
+            // Graduations
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#333';
+            for (let i = 1; i <= tMax; i++) {
+                ctx.fillText(i, getX(i) - 4, getY(0) + 15);
+                ctx.beginPath();
+                ctx.moveTo(getX(i), getY(0) - 5);
+                ctx.lineTo(getX(i), getY(0) + 5);
+                ctx.stroke();
+            }
+            
+            ctx.fillText("t", width - margin + 15, getY(0) + 20);
+            ctx.fillText("y", getX(0) - 20, margin - 15);
+            ctx.fillText("1", getX(0) - 15, getY(1) + 4);
+            ctx.fillText("π/2", getX(0) - 25, getY(Math.PI/2) + 4);
+            
+            // Ligne asymptotique pi/2
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = '#aaa';
+            ctx.moveTo(getX(0), getY(Math.PI/2));
+            ctx.lineTo(width - margin, getY(Math.PI/2));
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawExactCurve() {
+            ctx.beginPath();
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 2;
+            for (let t = 0; t <= tMax; t += 0.05) {
+                const y = exactSolution(t);
+                if (t === 0) ctx.moveTo(getX(t), getY(y));
+                else ctx.lineTo(getX(t), getY(y));
+            }
+            ctx.stroke();
+        }
+
+        function drawEuler(dt) {
+            let t = 0;
+            let y = 0; // Condition initiale y(0) = 0
+            
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--accent-color)';
+            ctx.lineWidth = 2;
+            ctx.moveTo(getX(t), getY(y));
+
+            // Tracer les points et les segments
+            while (t <= tMax) {
+                // Point courant
+                ctx.fillStyle = 'var(--accent-color)';
+                ctx.arc(getX(t), getY(y), 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.moveTo(getX(t), getY(y));
+
+                // Calcul du point suivant
+                let slope = f(t);
+                y = y + slope * dt;
+                t = t + dt;
+
+                if(t <= tMax + 0.001) { // Tolérance flottants
+                    ctx.lineTo(getX(t), getY(y));
+                }
+            }
+            ctx.stroke();
+        }
+
+        function updateCanvas() {
+            const dt = parseFloat(document.getElementById('stepSize').value);
+            drawAxes();
+            drawExactCurve();
+            drawEuler(dt);
+        }
+
+        // Initialisation
+        document.getElementById('drawBtn').addEventListener('click', updateCanvas);
+        document.getElementById('stepSize').addEventListener('change', updateCanvas);
+        
+        // Attendre le chargement des polices pour dessiner le canvas correctement
+        window.onload = updateCanvas;
+    </script>
+</body>
+</html>

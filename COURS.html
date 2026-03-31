@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cours Complet : Les Primitives</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* Variables CSS (Accessibilité) */
+        :root { 
+            --bg-color: #fdfdfd; 
+            --text-color: #1a202c; 
+            --heading-color: #2b6cb0;
+            --surface-color: #edf2f7; 
+            --border-color: #cbd5e0;
+            --accent-color: #e53e3e;
+            --table-head: #e2e8f0;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --spacing: 1.6;
+            --font-size-base: 16px;
+        }
+
+        body.high-contrast { 
+            --bg-color: #000000; --text-color: #ffffff; --heading-color: #ffff00;
+            --surface-color: #1a1a1a; --border-color: #ffffff; --accent-color: #00ff00;
+            --table-head: #333333;
+        }
+
+        body.dys { 
+            --font-main: 'Comic Sans MS', 'OpenDyslexic', sans-serif;
+            --spacing: 2; --font-size-base: 18px;
+            letter-spacing: 0.1em; word-spacing: 0.2em;
+        }
+
+        body { 
+            font-family: var(--font-main); background-color: var(--bg-color); 
+            color: var(--text-color); line-height: var(--spacing);
+            font-size: var(--font-size-base); margin: 0; padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+        h1, h2, h3 { color: var(--heading-color); }
+        h1 { border-bottom: 3px solid var(--accent-color); padding-bottom: 0.5rem; }
+        h2 { margin-top: 2.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3rem; }
+
+        .accessibility-panel {
+            background-color: var(--surface-color); padding: 1rem; border-radius: 8px;
+            margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;
+            border: 1px solid var(--border-color);
+        }
+
+        button {
+            background-color: var(--heading-color); color: #ffffff;
+            border: 2px solid transparent; padding: 0.8rem 1.2rem;
+            border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+        .high-contrast button { background-color: var(--bg-color); color: var(--heading-color); border: 2px solid var(--heading-color); }
+
+        .level-btn {
+            display: block; width: 100%; text-align: center; margin: 3rem 0;
+            padding: 1.2rem; font-size: 1.2rem; background-color: var(--accent-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .definition-box, .theorem-box {
+            background-color: var(--surface-color); border-left: 5px solid var(--heading-color);
+            padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0;
+        }
+        .theorem-box { border-left-color: var(--accent-color); }
+
+        table { width: 100%; border-collapse: collapse; margin: 2rem 0; background-color: var(--bg-color); }
+        th, td { border: 1px solid var(--border-color); padding: 1rem; text-align: center; }
+        th { background-color: var(--table-head); color: var(--text-color); font-weight: bold; }
+
+        .lab-controls {
+            display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; justify-content: center;
+            background: var(--surface-color); padding: 15px; border-radius: 8px;
+        }
+
+        .canvas-wrapper {
+            background: var(--bg-color); border: 2px solid var(--border-color);
+            border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            touch-action: none;
+        }
+
+        canvas { display: block; width: 100%; max-width: 800px; height: auto; cursor: crosshair; }
+
+        .interactive-text {
+            text-align: center; font-size: 1.2rem; padding: 1rem;
+            background: var(--surface-color); border-radius: 8px; margin-top: 1rem;
+        }
+        
+        #liveResult { font-weight: bold; color: var(--accent-color); font-size: 1.4rem;}
+        
+        #advancedSections { display: none; animation: fadeIn 0.5s ease-in-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Styles de la modale (Popup) --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto;
+            background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal.show {
+            display: block; opacity: 1;
+        }
+        .modal-content {
+            background-color: var(--bg-color); color: var(--text-color);
+            margin: 10vh auto; padding: 2rem; border: 1px solid var(--border-color);
+            border-radius: 8px; width: 90%; max-width: 700px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            position: relative; transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+        .close-modal {
+            color: var(--accent-color); float: right; font-size: 28px;
+            font-weight: bold; cursor: pointer; line-height: 1;
+        }
+        .close-modal:hover, .close-modal:focus {
+            color: var(--text-color); text-decoration: none;
+        }
+        .modal-content ul {
+            padding-left: 1.5rem;
+        }
+        .modal-content li {
+            margin-bottom: 0.8rem;
+        }
+        .modal-content a {
+            color: var(--heading-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="accessibility-panel">
+        <strong>Outils d'accessibilité :</strong>
+        <button onclick="document.body.classList.toggle('dys')">Mode Dyslexie</button>
+        <button onclick="document.body.classList.toggle('high-contrast')">Haut Contraste</button>
+    </div>
+
+    <h1>Cours Complet : Les Primitives</h1>
+
+    <h2>1. L'intuition (Pour bien démarrer)</h2>
+    <p>En physique, si vous connaissez la position d'une voiture à chaque instant, vous pouvez calculer sa vitesse en dérivant. La <strong>primitive</strong>, c'est l'opération inverse. Si on vous donne la vitesse de la voiture, trouver la primitive revient à retrouver sa position d'origine.</p>
+
+    <h2>2. Fondements Théoriques</h2>
+    <div class="definition-box">
+        <h3>Définition</h3>
+        <p>Soit $f$ une fonction définie sur un intervalle $I$. On appelle primitive de $f$ sur $I$, toute fonction $F$ dérivable sur $I$ telle que pour tout réel $x$ de $I$ :</p>
+        $$F'(x) = f(x)$$
+    </div>
+
+    <div class="theorem-box">
+        <h3>Théorème d'existence et Unicité</h3>
+        <p>Toute fonction continue sur un intervalle $I$ admet des primitives sur $I$. Si $F$ est une primitive de $f$, alors toute autre primitive s'écrit $G(x) = F(x) + C$ (où $C$ est une constante réelle).</p>
+    </div>
+    
+    <h2>3. Opérations sur les primitives (Commun à tous)</h2>
+    <p>Comme pour la dérivation, les primitives possèdent des propriétés de calcul essentielles que l'on appelle la <strong>linéarité</strong>.</p>
+    
+    <div class="op-box">
+        <h3>A. Somme de fonctions</h3>
+        <p>Si $F$ est une primitive de $f$ et $G$ une primitive de $g$, alors une primitive de $f + g$ est : $$F + G$$</p>
+    </div>
+
+    <div class="op-box">
+        <h3>B. Multiplication par un réel (k)</h3>
+        <p>Si $F$ est une primitive de $f$, alors pour tout nombre réel $k$, une primitive de $k \times f$ est : $$k \times F$$</p>
+    </div>
+
+    <h2>4. Formules Usuelles (Classe de Première)</h2>
+    <p>En classe de Première, l'objectif principal est de maîtriser les primitives des fonctions polynômes. Voici les briques de base :</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Fonction $f(x)$</th>
+                <th>Primitives $F(x)$</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>$k$ (une constante, ex: $5$)</td><td>$kx + C$ (ex: $5x + C$)</td></tr>
+            <tr><td>$x$ (premier degré)</td><td>$\frac{1}{2}x^2 + C$</td></tr>
+            <tr><td>$x^2$ (second degré)</td><td>$\frac{1}{3}x^3 + C$</td></tr>
+            <tr><td>$x^3$ (troisième degré)</td><td>$\frac{1}{4}x^4 + C$</td></tr>
+        </tbody>
+    </table>
+    
+    <div class="definition-box">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="margin: 0;">Exemple de combinaison</h3>
+            <button id="btnRandomEx" style="font-size: 0.9rem; padding: 0.4rem 0.8rem; background-color: var(--heading-color);">🔄 Générer un polynôme</button>
+        </div>
+        <p>Grâce à la règle de l'addition, on peut trouver la primitive d'un polynôme entier :</p>
+        <p id="random-fx">Si $f(x) = 3x^2 + 2x - 5$</p>
+        <p id="random-Fx">Alors sa primitive est $F(x) = x^3 + x^2 - 5x + C$</p>
+    </div>
+
+    <button id="btnTerm" class="level-btn">🔓 Classe Terminale et au delà</button>
+
+    <div id="advancedSections">
+        <h2>5. Formules Usuelles (Les outils de base)</h2>
+        <p>Le tableau s'élargit en Terminale avec les fonctions inverses, racines, exponentielles et trigonométriques :</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fonction $f(x)$</th>
+                    <th>Primitives $F(x)$</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>$x^n$ ($n \in \mathbb{N}$)</td><td>$\frac{x^{n+1}}{n+1} + C$</td></tr>
+                <tr><td>$\frac{1}{x^n}$ ($n \geq 2$)</td><td>$-\frac{1}{(n-1)x^{n-1}} + C$</td></tr>
+                <tr><td>$\frac{1}{\sqrt{x}}$</td><td>$2\sqrt{x} + C$</td></tr>
+                <tr><td>$e^x$</td><td>$e^x + C$</td></tr>
+                <tr><td>$\cos(x)$</td><td>$\sin(x) + C$</td></tr>
+                <tr><td>$\sin(x)$</td><td>$-\cos(x) + C$</td></tr>
+            </tbody>
+        </table>
+
+        <h2>6. Fonctions Composées</h2>
+        <p>Il faut désormais repérer la présence d'une fonction $u(x)$ et de sa dérivée $u'(x)$ au sein du calcul :</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Forme reconnue $f(x)$</th>
+                    <th>Primitive $F(x)$</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>$u'(x) \cdot u(x)^n$</td><td>$\frac{u(x)^{n+1}}{n+1} + C$</td></tr>
+                <tr><td>$\frac{u'(x)}{u(x)}$</td><td>$\ln(|u(x)|) + C$</td></tr>
+                <tr><td>$u'(x) \cdot e^{u(x)}$</td><td>$e^{u(x)} + C$</td></tr>
+            </tbody>
+        </table>
+
+        <h2>7. Laboratoire Interactif : Lien entre Primitive et Intégrale</h2>
+        <p>Même si une fonction a une équation extrêmement complexe, <strong>elle possède toujours une primitive si elle est continue</strong>. Cette primitive correspond à l'aire sous la courbe accumulée depuis un point de départ.</p>
+        <p><strong>Instruction :</strong> Cliquez sur "Générer une fonction complexe" pour créer une nouvelle fonction aléatoire. Survolez ensuite le graphique : la zone colorée calcule numériquement l'intégrale (la primitive $F(x)$) en temps réel.</p>
+
+        <div class="lab-controls">
+            <button id="newFuncBtn" style="background-color: var(--accent-color);">🔄 Générer une fonction complexe aléatoire</button>
+        </div>
+
+        <div class="interactive-text" id="mathFormula">
+            Génération en cours...
+        </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="mathCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="interactive-text">
+            Valeur de la primitive (l'aire) calculée pour <span id="valX">x = 0.00</span> :<br>
+            <span id="liveResult">F(x) = 0.000</span>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+        <button id="btnCopyright" style="background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color);">© Droits d'auteur</button>
+    </div>
+</div>
+
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+        <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>) - Mars 2026</p>
+        
+        <h3>Licence d'Utilisation Non Commerciale</h3>
+        <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ("Cours Complet : Les Primitives") sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+        
+        <h3>Conditions :</h3>
+        <ul>
+            <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+            <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+            <li><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+        </ul>
+        <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+    </div>
+</div>
+
+<script>
+    // --- Générateur de polynôme aléatoire ---
+    function formatPoly(coeffs) {
+        let str = "";
+        let isFirst = true;
+        for (let [c, p] of coeffs) {
+            if (c === 0) continue;
+            let sign = c > 0 ? (isFirst ? "" : " + ") : (isFirst ? "-" : " - ");
+            let absC = Math.abs(c);
+            let cStr = (absC === 1 && p > 0) ? "" : absC.toString();
+            let xStr = p === 0 ? "" : (p === 1 ? "x" : `x^{${p}}`);
+            str += sign + cStr + xStr;
+            isFirst = false;
+        }
+        return str === "" ? "0" : str;
+    }
+
+    function generateRandomExample() {
+        // Choix de coefficients pour la primitive (F) afin d'obtenir des entiers propres
+        let A = Math.floor(Math.random() * 7) - 3; // de -3 à 3
+        if (A === 0) A = (Math.random() > 0.5 ? 1 : -1); 
+        let B = Math.floor(Math.random() * 11) - 5; // de -5 à 5
+        let C = Math.floor(Math.random() * 11) - 5; // de -5 à 5
+        if (A === 0 && B === 0 && C === 0) C = 1;
+
+        // Dérivée pour obtenir la fonction initiale f(x)
+        let a = 3 * A;
+        let b = 2 * B;
+        let c = C;
+
+        let fxStr = formatPoly([[a, 2], [b, 1], [c, 0]]);
+        let FxStr = formatPoly([[A, 3], [B, 2], [C, 1]]) + " + C";
+
+        const p_fx = document.getElementById("random-fx");
+        const p_Fx = document.getElementById("random-Fx");
+
+        p_fx.innerHTML = `Si $f(x) = ${fxStr}$`;
+        p_Fx.innerHTML = `Alors sa primitive est $F(x) = ${FxStr}$`;
+
+        // Rafraîchir l'affichage MathJax
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([p_fx, p_Fx]);
+        }
+    }
+
+    document.getElementById('btnRandomEx').addEventListener('click', generateRandomExample);
+
+
+    // --- Gestion de l'affichage Terminale ---
+    const btnTerm = document.getElementById('btnTerm');
+    const advancedSections = document.getElementById('advancedSections');
+    let isTerminaleInitialized = false;
+
+    btnTerm.addEventListener('click', () => {
+        if (advancedSections.style.display === 'none' || advancedSections.style.display === '') {
+            advancedSections.style.display = 'block';
+            btnTerm.innerHTML = '🔒 Masquer la section Terminale et au delà';
+            btnTerm.style.backgroundColor = 'var(--text-color)';
+            
+            if (!isTerminaleInitialized) {
+                initNewFunction();
+                isTerminaleInitialized = true;
+            }
+        } else {
+            advancedSections.style.display = 'none';
+            btnTerm.innerHTML = '🔓 Classe Terminale et au delà';
+            btnTerm.style.backgroundColor = 'var(--accent-color)';
+        }
+    });
+
+
+    // --- Laboratoire Interactif ---
+    const canvas = document.getElementById('mathCanvas');
+    const ctx = canvas.getContext('2d');
+    const valXDisplay = document.getElementById('valX');
+    const liveResultDisplay = document.getElementById('liveResult');
+    const mathFormulaDisplay = document.getElementById('mathFormula');
+    
+    let mouseX = 400; 
+    let currentProblem = null;
+    const tMax = 6; 
+
+    function formatNb(num) {
+        return parseFloat(num.toFixed(2)).toString().replace(/\./g, '{,}');
+    }
+
+    function getSimpsonsIntegral(func, a, b) {
+        if (a === b) return 0;
+        if (b < a) return -getSimpsonsIntegral(func, b, a);
+        const n = 150; 
+        const h = (b - a) / n;
+        let sum = func(a) + func(b);
+        for (let i = 1; i < n; i++) {
+            sum += func(a + i * h) * (i % 2 === 0 ? 2 : 4);
+        }
+        return (h / 3) * sum;
+    }
+
+    function generateRandomProblem() {
+        let A = parseFloat(((Math.random() * 2 + 1) * (Math.random() < 0.5 ? 1 : -1)).toFixed(1)); 
+        let a2 = parseFloat(((Math.random() * 2 + 0.5) * (Math.random() < 0.5 ? 1 : -1)).toFixed(1));
+        let a0 = parseFloat(((Math.random() * 3 + 1) * (Math.random() < 0.5 ? 1 : -1)).toFixed(1));
+        let b = parseFloat((Math.random() * 1.5 + 1.1).toFixed(1)); 
+
+        const forms = ["cos_poly", "poly_sin", "exp_cos", "inv_poly", "sin_exp"];
+        let form = forms[Math.floor(Math.random() * forms.length)];
+
+        let fTex, func;
+
+        if (form === "cos_poly") {
+            fTex = `${formatNb(A)}\\cos(${formatNb(a2)}t^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)})`;
+            func = (t) => A * Math.cos(a2 * t * t + a0);
+        } 
+        else if (form === "poly_sin") {
+            fTex = `${formatNb(a2)}(${formatNb(A)}\\sin(t))^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)}`;
+            func = (t) => a2 * Math.pow(A * Math.sin(t), 2) + a0;
+        }
+        else if (form === "exp_cos") {
+            fTex = `${formatNb(A)} \\times ${formatNb(b)}^{\\cos(t)}`;
+            func = (t) => A * Math.pow(b, Math.cos(t));
+        }
+        else if (form === "inv_poly") {
+            a2 = Math.abs(a2); a0 = Math.abs(a0) + 0.5; 
+            fTex = `\\dfrac{${formatNb(A * 5)}}{${formatNb(a2)}t^2 + ${formatNb(a0)}}`;
+            func = (t) => (A * 5) / (a2 * t * t + a0);
+        }
+        else if (form === "sin_exp") {
+            fTex = `${formatNb(A)}\\sin(${formatNb(b)}^t)`;
+            func = (t) => A * Math.sin(Math.pow(b, t));
+        }
+
+        let min_y = 0;
+        let max_y = 0;
+        for(let t = 0; t <= tMax; t += 0.05) {
+            let val = func(t);
+            if (val < min_y) min_y = val;
+            if (val > max_y) max_y = val;
+        }
+        let range = max_y - min_y;
+        if (range < 2) range = 2; 
+
+        return { func: func, fTex: fTex, yMin: min_y - 0.2 * range, yMax: max_y + 0.2 * range };
+    }
+
+    function drawGraph() {
+        if (!currentProblem || advancedSections.style.display === 'none') return;
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 50;
+        const scaleX = (width - padding * 2) / tMax;
+        const scaleY = (height - padding * 2) / (currentProblem.yMax - currentProblem.yMin);
+
+        const style = getComputedStyle(document.body);
+        const bgColor = style.getPropertyValue('--bg-color').trim();
+        const textColor = style.getPropertyValue('--text-color').trim();
+        const accentColor = style.getPropertyValue('--accent-color').trim();
+        const borderColor = style.getPropertyValue('--border-color').trim();
+
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, width, height);
+
+        const toPixX = (mathX) => padding + mathX * scaleX;
+        const toPixY = (mathY) => height - padding - (mathY - currentProblem.yMin) * scaleY;
+
+        let zeroY = toPixY(0);
+        if(0 < currentProblem.yMin) zeroY = height - padding;
+        if(0 > currentProblem.yMax) zeroY = padding;
+
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1;
+        for(let i=0; i<=tMax; i++) {
+            ctx.beginPath(); ctx.moveTo(toPixX(i), padding); ctx.lineTo(toPixX(i), height - padding); ctx.stroke();
+            ctx.fillStyle = textColor; ctx.fillText(i, toPixX(i) - 4, zeroY + 15);
+        }
+
+        ctx.strokeStyle = textColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding / 2); 
+        ctx.lineTo(padding, height - padding);
+        ctx.moveTo(padding, zeroY); 
+        ctx.lineTo(width - padding / 2, zeroY);
+        ctx.stroke();
+
+        let currentMathX = (mouseX - padding) / scaleX;
+        currentMathX = Math.max(0, Math.min(tMax, currentMathX));
+
+        ctx.fillStyle = accentColor;
+        ctx.beginPath();
+        ctx.moveTo(toPixX(0), zeroY);
+        for(let t = 0; t <= currentMathX; t += 0.05) {
+            ctx.lineTo(toPixX(t), toPixY(currentProblem.func(t)));
+        }
+        ctx.lineTo(toPixX(currentMathX), zeroY);
+        ctx.closePath();
+        ctx.globalAlpha = 0.4;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        ctx.strokeStyle = textColor;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for(let t = 0; t <= tMax; t += 0.05) {
+            if(t===0) ctx.moveTo(toPixX(t), toPixY(currentProblem.func(t)));
+            else ctx.lineTo(toPixX(t), toPixY(currentProblem.func(t)));
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = accentColor;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(toPixX(currentMathX), zeroY);
+        ctx.lineTo(toPixX(currentMathX), toPixY(currentProblem.func(currentMathX)));
+        ctx.stroke();
+        ctx.setLineDash([]); 
+
+        const integralValue = getSimpsonsIntegral(currentProblem.func, 0, currentMathX);
+        valXDisplay.textContent = `x = ${currentMathX.toFixed(2)}`;
+        liveResultDisplay.textContent = `F(x) = ${integralValue.toFixed(3)}`;
+    }
+
+    function initNewFunction() {
+        currentProblem = generateRandomProblem();
+        mouseX = canvas.width / 2; 
+        
+        mathFormulaDisplay.innerHTML = `Fonction étudiée : $$f(t) = ${currentProblem.fTex}$$ <br> Primitive cherchée : $$F(x) = \\int_{0}^{x} f(t) dt$$`;
+        
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([mathFormulaDisplay]).then(drawGraph);
+        } else {
+            drawGraph();
+        }
+    }
+
+    function updateMousePos(evt) {
+        if (!isTerminaleInitialized || advancedSections.style.display === 'none') return;
+        const rect = canvas.getBoundingClientRect();
+        const scale = canvas.width / rect.width; 
+        mouseX = (evt.clientX - rect.left) * scale;
+        drawGraph();
+    }
+
+    canvas.addEventListener('mousemove', updateMousePos);
+    canvas.addEventListener('touchmove', (evt) => {
+        if (advancedSections.style.display === 'none') return;
+        evt.preventDefault();
+        updateMousePos(evt.touches[0]);
+    }, { passive: false });
+
+    document.getElementById('newFuncBtn').addEventListener('click', initNewFunction);
+
+    const observer = new MutationObserver(() => {
+        if(isTerminaleInitialized && advancedSections.style.display !== 'none') drawGraph();
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // --- Gestion de la modale Droits d'auteur ---
+    const modal = document.getElementById("copyrightModal");
+    const btnCopyright = document.getElementById("btnCopyright");
+    const spanClose = document.getElementsByClassName("close-modal")[0];
+
+    btnCopyright.addEventListener('click', () => {
+        modal.style.display = "block";
+        void modal.offsetWidth;
+        modal.classList.add("show");
+    });
+
+    spanClose.addEventListener('click', () => {
+        modal.classList.remove("show");
+        setTimeout(() => {
+            modal.style.display = "none";
+        }, 300); 
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.classList.remove("show");
+            setTimeout(() => {
+                modal.style.display = "none";
+            }, 300);
+        }
+    });
+
+</script>
+
+</body>
+</html>

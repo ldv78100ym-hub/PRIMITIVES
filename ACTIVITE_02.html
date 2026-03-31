@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activité : La Méthode d'Euler (1ère STI2D)</title>
+    
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #d35400;
+            --bg-color: #f4f7f6;
+            --box-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* --- Style du bouton et Modal Droits d'auteur --- */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .copyright-btn {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 6px 12px;
+            font-size: 0.85em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .copyright-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(2px);
+            overflow-y: auto; /* Permet le défilement vertical si le contenu dépasse */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* Ajusté pour laisser plus de place au contenu */
+            padding: 30px;
+            border: 1px solid #888;
+            width: 85%;
+            max-width: 650px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #333;
+            text-decoration: none;
+        }
+        /* ------------------------------------------------- */
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            margin-top: 0;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-bar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .section-box {
+            background: var(--box-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #ecf0f1;
+            color: var(--primary-color);
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        canvas {
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button, select {
+            padding: 8px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: white;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #1a252f;
+        }
+        
+        button:disabled, select:disabled {
+            background-color: #95a5a6;
+            border-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        select {
+            background-color: white;
+            color: var(--text-color);
+        }
+
+        #newBtn {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        #newBtn:hover:not(:disabled) {
+            background-color: #a84300;
+        }
+
+        #drawBtn {
+            background-color: #2980b9;
+            font-weight: bold;
+        }
+        
+        #drawBtn:hover:not(:disabled) {
+            background-color: #1c5980;
+        }
+
+        .calculation-log {
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            background-color: #fdfdfd;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-sizing: border-box;
+            font-size: 1.1em;
+        }
+
+        .calculation-step {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .calculation-step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .question {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 15px;
+        }
+
+        .answer-area {
+            width: 100%;
+            height: 60px;
+            border: 1px dashed var(--border-color);
+            margin-top: 10px;
+            background-color: #fafafa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <button id="copyrightBtn" class="copyright-btn">Droits d'auteur</button>
+    </div>
+
+    <h1>Activité : Construire une primitive pas à pas</h1>
+
+    <div id="copyrightModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 style="margin-top: 0; color: var(--primary-color);">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Mars 2026</p>
+            <p style="color: var(--secondary-color); font-weight: bold;">Licence d'Utilisation Non Commerciale</p>
+            <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ("Cours et Exercices Dynamiques : Primitives") sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            
+            <h3 style="margin-bottom: 10px;">Conditions :</h3>
+            <ul style="line-height: 1.6;">
+                <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu <strong>uniquement</strong> à des fins <strong>personnelles, éducatives et non lucratives.</strong></li>
+                <li style="margin-top: 10px;"><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins <strong>commerciales, lucratives ou professionnelles</strong> est <strong>strictement interdite</strong> sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li style="margin-top: 10px;"><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+            </ul>
+            
+            <p style="margin-top: 20px; font-style: italic; font-size: 0.9em; border-top: 1px solid #ccc; padding-top: 15px;">Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+        </div>
+    </div>
+
+    <div class="info-bar">
+        <span>👥 Travail en groupe (3 à 4 élèves)</span>
+        <span>⏱️ Durée estimée : 1 heure</span>
+    </div>
+
+    <div class="section-box">
+        <h2>Phase 1 : Le principe de la méthode d'Euler (10 min)</h2>
+        <p>En physique et en ingénierie, on connaît souvent la dérivée d'une fonction et on cherche la fonction elle-même. Mathématiquement, cela revient à chercher une <strong>primitive</strong>.</p>
+        
+        <p>Si \( \Delta t \) est très petit, on peut avancer "pas à pas" depuis un point de départ connu en utilisant l'approximation affine locale :</p>
+        <div style="text-align: center; font-size: 1.3em; margin: 15px 0; padding: 10px; background: #e8f4f8; border-radius: 5px;">
+            \[ F(t + \Delta t) \approx F(t) + f(t) \times \Delta t \]
+        </div>
+    </div>
+
+    <div class="section-box">
+        <h2>Phase 2 : Calcul "à la main" (15 min)</h2>
+        <p>Considérons la fonction <span id="math-f">...</span>. On cherche la fonction \( F \) (la primitive de \( f \)) telle que :</p>
+        <ul>
+            <li><span id="math-yprime">...</span></li>
+            <li id="math-condition" style="font-weight: bold; color: var(--secondary-color);">...</li>
+        </ul>
+        <p>Prenez un pas de temps <strong>\( \Delta t = 0,5 \)</strong>. Complétez le tableau suivant (arrondissez au millième) :</p>
+        
+        <table>
+            <tr>
+                <th>Étape \( k \)</th>
+                <th>Temps \( t_k \)</th>
+                <th>Valeur de la dérivée <br><span id="math-th">...</span></th>
+                <th>Nouvelle valeur <br>\( F(t_{k+1}) = F(t_k) + f(t_k) \times 0{,}5 \)</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td><span id="math-t0">...</span></td>
+                <td><span id="math-td-deriv">...</span></td>
+                <td><span id="math-td-y">...</span></td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td><span id="math-t1">...</span></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><span id="math-t2">...</span></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><span id="math-t3">...</span></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section-box">
+        <h2>Phase 3 : Simulation algorithmique (20 min)</h2>
+        
+        <div class="canvas-container">
+            <canvas id="eulerCanvas" width="800" height="400"></canvas>
+            
+            <div class="controls">
+                <button id="newBtn">🔄 Nouveau problème</button>
+                <label for="stepSize" style="margin-left: 10px;"><strong>Pas (\( \Delta t \)) :</strong></label>
+                <select id="stepSize">
+                    <option value="1">1.0 (Très grand)</option>
+                    <option value="0.5" selected>0.5 (Celui calculé à la main)</option>
+                    <option value="0.2">0.2</option>
+                    <option value="0.1">0.1</option>
+                    <option value="0.05">0.05 (Très petit)</option>
+                </select>
+                <button id="drawBtn">▶ Lancer la simulation</button>
+                <button id="showExactBtn" style="background-color: #2980b9;">Afficher la solution exacte</button>
+            </div>
+            
+            <div id="logContainer" class="calculation-log" style="display: none;">
+                <h3 style="margin-top: 0; color: var(--primary-color);">Détail des calculs en cours</h3>
+                <div id="calcList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gestion de la fenêtre contextuelle (Modal) Droits d'Auteur
+        const modal = document.getElementById("copyrightModal");
+        const btn = document.getElementById("copyrightBtn");
+        const span = document.getElementsByClassName("close-btn")[0];
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // ------------------ Code de l'activité Euler ------------------
+
+        const canvas = document.getElementById('eulerCanvas');
+        const ctx = canvas.getContext('2d');
+        let showExact = false;
+        let currentProblem;
+        let animationInProgress = false;
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        const margin = 50;
+
+        const colorExact = '#2980b9'; 
+        const colorApprox = '#8e44ad'; 
+
+        function getSimpsonsIntegral(func, a, b) {
+            if (a === b) return 0;
+            const n = 200; 
+            const h = (b - a) / n;
+            let sum = func(a) + func(b);
+            for (let i = 1; i < n; i++) {
+                sum += func(a + i * h) * (i % 2 === 0 ? 2 : 4);
+            }
+            return (h / 3) * sum;
+        }
+
+        function formatNb(num) {
+            return parseFloat(num.toFixed(3)).toString().replace(/\./g, '{,}');
+        }
+
+        function colorT(num) {
+            return `{\\color{${colorApprox}}\\mathbf{${formatNb(num)}}}`;
+        }
+
+        function generateRandomProblem() {
+            let alpha = Math.floor(Math.random() * 11) - 5; 
+            let beta = Math.floor(Math.random() * 11) - 5; 
+
+            let A = parseFloat(((Math.random() * 8 + 1) * (Math.random() < 0.5 ? 1 : -1)).toFixed(1)); 
+            let b = parseFloat((Math.random() * 3 + 0.5).toFixed(1)); 
+            let a2 = parseFloat(((Math.random() * 3 + 0.5) * (Math.random() < 0.5 ? 1 : -1)).toFixed(1));
+            let a0 = parseFloat(((Math.random() * 4 + 1) * (Math.random() < 0.5 ? 1 : -1)).toFixed(1));
+            
+            let duration = Math.floor(Math.random() * 5) + 4; 
+            let tMax = alpha + duration;
+
+            const forms = ["cos_poly", "sqrt_poly", "poly_sin", "exp_cos", "inv_poly", "sin_exp"];
+            let form = forms[Math.floor(Math.random() * forms.length)];
+
+            let fTex, fTexTk, func, fDetail, exactName;
+
+            if (form === "cos_poly") {
+                fTex = `${formatNb(A)}\\cos(${formatNb(a2)}t^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)})`;
+                fTexTk = `${formatNb(A)}\\cos(${formatNb(a2)}t_k^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)})`;
+                func = (t) => A * Math.cos(a2 * t * t + a0);
+                fDetail = (t_val) => `${formatNb(A)}\\cos(${formatNb(a2)} \\times (${colorT(t_val)})^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)})`;
+                exactName = "Composée : cos(Polynôme)";
+            } 
+            else if (form === "sqrt_poly") {
+                a2 = Math.abs(a2); a0 = Math.abs(a0); 
+                fTex = `${formatNb(A)}\\sqrt{${formatNb(a2)}t^2 + ${formatNb(a0)}}`;
+                fTexTk = `${formatNb(A)}\\sqrt{${formatNb(a2)}t_k^2 + ${formatNb(a0)}}`;
+                func = (t) => A * Math.sqrt(a2 * t * t + a0);
+                fDetail = (t_val) => `${formatNb(A)}\\sqrt{${formatNb(a2)} \\times (${colorT(t_val)})^2 + ${formatNb(a0)}}`;
+                exactName = "Composée : sqrt(Polynôme)";
+            }
+            else if (form === "poly_sin") {
+                fTex = `${formatNb(a2)}(${formatNb(A)}\\sin(t))^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)}`;
+                fTexTk = `${formatNb(a2)}(${formatNb(A)}\\sin(t_k))^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)}`;
+                func = (t) => a2 * Math.pow(A * Math.sin(t), 2) + a0;
+                fDetail = (t_val) => `${formatNb(a2)}(${formatNb(A)}\\sin(${colorT(t_val)}))^2 ${a0 > 0 ? '+' : ''} ${formatNb(a0)}`;
+                exactName = "Composée : Polynôme(sin)";
+            }
+            else if (form === "exp_cos") {
+                fTex = `${formatNb(A)} \\times ${formatNb(b)}^{\\cos(t)}`;
+                fTexTk = `${formatNb(A)} \\times ${formatNb(b)}^{\\cos(t_k)}`;
+                func = (t) => A * Math.pow(b, Math.cos(t));
+                fDetail = (t_val) => `${formatNb(A)} \\times ${formatNb(b)}^{\\cos(${colorT(t_val)})}`;
+                exactName = "Composée : Exp(cos)";
+            }
+            else if (form === "inv_poly") {
+                a2 = Math.abs(a2); a0 = Math.abs(a0) + 0.1; 
+                fTex = `\\dfrac{${formatNb(A)}}{${formatNb(a2)}t^2 + ${formatNb(a0)}}`;
+                fTexTk = `\\dfrac{${formatNb(A)}}{${formatNb(a2)}t_k^2 + ${formatNb(a0)}}`;
+                func = (t) => A / (a2 * t * t + a0);
+                fDetail = (t_val) => `\\dfrac{${formatNb(A)}}{${formatNb(a2)} \\times (${colorT(t_val)})^2 + ${formatNb(a0)}}`;
+                exactName = "Composée : Inverse(Polynôme)";
+            }
+            else if (form === "sin_exp") {
+                fTex = `${formatNb(A)}\\sin(${formatNb(b)}^t)`;
+                fTexTk = `${formatNb(A)}\\sin(${formatNb(b)}^{t_k})`;
+                func = (t) => A * Math.sin(Math.pow(b, t));
+                fDetail = (t_val) => `${formatNb(A)}\\sin(${formatNb(b)}^{${colorT(t_val)}})`;
+                exactName = "Composée : sin(Exp)";
+            }
+
+            let exact = (t) => beta + getSimpsonsIntegral(func, alpha, t);
+            
+            let min_F = beta;
+            let max_F = beta;
+            for(let t = alpha; t <= tMax; t += 0.1) {
+                let val = exact(t);
+                if (val < min_F) min_F = val;
+                if (val > max_F) max_F = val;
+            }
+            let range = max_F - min_F;
+            if (range < 0.5) range = 1; 
+            let yMin = min_F - 0.2 * range;
+            let yMax = max_F + 0.2 * range;
+
+            let fAlpha = func(alpha);
+            let fAlphaTex = formatNb(fAlpha);
+            let FNext = beta + fAlpha * 0.5;
+            let FNextTex = `${formatNb(beta)} + (${fAlphaTex}) \\times 0{,}5 = ${formatNb(FNext)}`;
+
+            return {
+                alpha: alpha,
+                beta: beta,
+                fTex: fTex,
+                fTexTk: fTexTk,
+                func: func,
+                fDetail: fDetail,
+                exact: exact,
+                exactName: exactName,
+                tMax: tMax,
+                yMin: yMin,
+                yMax: yMax,
+                fAlphaTex: fAlphaTex,
+                FNextTex: FNextTex
+            };
+        }
+
+        function getX(t) { 
+            return margin + ((t - currentProblem.alpha) / (currentProblem.tMax - currentProblem.alpha)) * (width - 2 * margin); 
+        }
+        function getY(y) { 
+            const yMin = currentProblem.yMin;
+            const yMax = currentProblem.yMax;
+            return height - margin - ((y - yMin) / (yMax - yMin)) * (height - 2 * margin); 
+        }
+
+        function drawAxes() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const alpha = currentProblem.alpha;
+            const tMax = currentProblem.tMax;
+            const yMin = currentProblem.yMin;
+            const yMax = currentProblem.yMax;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            let minXInt = Math.ceil(alpha);
+            let maxXInt = Math.floor(tMax);
+            for (let i = minXInt; i <= maxXInt; i++) {
+                ctx.moveTo(getX(i), getY(yMin));
+                ctx.lineTo(getX(i), getY(yMax));
+            }
+            
+            let minYInt = Math.floor(yMin);
+            let maxYInt = Math.floor(yMax);
+            let yStep = Math.max(1, Math.floor((maxYInt - minYInt) / 10));
+            
+            for (let j = minYInt; j <= maxYInt; j += yStep) {
+                ctx.moveTo(getX(alpha), getY(j));
+                ctx.lineTo(width - margin + 10, getY(j));
+            }
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            
+            ctx.moveTo(getX(alpha), getY(yMin)); 
+            ctx.lineTo(getX(alpha), getY(yMax) - 15);
+            
+            let yZero = (0 >= yMin && 0 <= yMax) ? 0 : yMin;
+            ctx.moveTo(getX(alpha), getY(yZero)); 
+            ctx.lineTo(width - margin + 15, getY(yZero));
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.fillStyle = '#333';
+            
+            ctx.moveTo(getX(alpha), getY(yMax) - 20); 
+            ctx.lineTo(getX(alpha) - 5, getY(yMax) - 10); 
+            ctx.lineTo(getX(alpha) + 5, getY(yMax) - 10); 
+            ctx.fill();
+            
+            ctx.moveTo(width - margin + 20, getY(yZero)); 
+            ctx.lineTo(width - margin + 10, getY(yZero) - 5); 
+            ctx.lineTo(width - margin + 10, getY(yZero) + 5); 
+            ctx.fill();
+
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#333';
+            for (let i = minXInt; i <= maxXInt; i++) {
+                ctx.fillText(i, getX(i) - 4, getY(yZero) + 20);
+                ctx.beginPath();
+                ctx.moveTo(getX(i), getY(yZero) - 5); ctx.lineTo(getX(i), getY(yZero) + 5);
+                ctx.stroke();
+            }
+            
+            for (let j = minYInt; j <= maxYInt; j += yStep) {
+                if(j === yZero) continue;
+                ctx.fillText(j, getX(alpha) - 25, getY(j) + 5);
+                ctx.beginPath();
+                ctx.moveTo(getX(alpha) - 5, getY(j)); ctx.lineTo(getX(alpha) + 5, getY(j));
+                ctx.stroke();
+            }
+
+            ctx.fillText("t", width - margin + 5, getY(yZero) - 15);
+            ctx.fillText("F", getX(alpha) + 15, getY(yMax) - 15);
+        }
+
+        function drawExactCurve() {
+            if (!showExact) return;
+            ctx.beginPath();
+            ctx.strokeStyle = colorExact;
+            ctx.lineWidth = 3;
+            for (let t = currentProblem.alpha; t <= currentProblem.tMax; t += 0.05) {
+                if (t === currentProblem.alpha) ctx.moveTo(getX(t), getY(currentProblem.exact(t)));
+                else ctx.lineTo(getX(t), getY(currentProblem.exact(t)));
+            }
+            ctx.stroke();
+            
+            ctx.fillStyle = colorExact;
+            let midT = currentProblem.alpha + (currentProblem.tMax - currentProblem.alpha) / 2;
+            ctx.fillText("Solution exacte", getX(midT), getY(currentProblem.exact(midT)) - 15);
+        }
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        async function animateEuler() {
+            if (animationInProgress) return;
+            animationInProgress = true;
+            
+            document.getElementById('drawBtn').disabled = true;
+            document.getElementById('newBtn').disabled = true;
+            document.getElementById('stepSize').disabled = true;
+
+            const dt = parseFloat(document.getElementById('stepSize').value);
+            
+            let delay = dt >= 0.5 ? 1000 : (dt >= 0.2 ? 500 : (dt >= 0.1 ? 200 : 50));
+
+            const logContainer = document.getElementById('logContainer');
+            const calcList = document.getElementById('calcList');
+            logContainer.style.display = 'block';
+            calcList.innerHTML = '';
+            
+            drawAxes();
+            drawExactCurve();
+
+            let stepCount = 0;
+            let t = currentProblem.alpha;
+            let F = currentProblem.beta;
+
+            ctx.beginPath();
+            ctx.strokeStyle = colorApprox;
+            ctx.lineWidth = 2;
+            ctx.moveTo(getX(t), getY(F));
+
+            while (t <= currentProblem.tMax + dt / 2) {
+                
+                ctx.fillStyle = colorApprox;
+                ctx.beginPath();
+                ctx.arc(getX(t), getY(F), dt >= 0.2 ? 4 : 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                let slope = currentProblem.func(t);
+                let next_F = F + slope * dt;
+                let next_t = currentProblem.alpha + (stepCount + 1) * dt; 
+
+                if(next_t <= currentProblem.tMax + dt) {
+                    ctx.moveTo(getX(t), getY(F));
+                    ctx.lineTo(getX(next_t), getY(next_F));
+                    ctx.stroke();
+                }
+
+                let t_styled = colorT(t);
+                let stepDiv = document.createElement('div');
+                stepDiv.className = 'calculation-step';
+                stepDiv.innerHTML = `
+                    \\( \\textbf{Étape ${stepCount}} : t_{${stepCount}} = ${t_styled} \\)<br>
+                    \\( f(${t_styled}) = ${currentProblem.fDetail(t)} = ${formatNb(slope)} \\)<br>
+                    \\( F(${formatNb(next_t)}) \\approx F(${t_styled}) + f(${t_styled}) \\times ${formatNb(dt)} = ${formatNb(F)} + (${formatNb(slope)}) \\times ${formatNb(dt)} = ${formatNb(next_F)} \\)
+                `;
+                calcList.appendChild(stepDiv);
+                
+                logContainer.scrollTop = logContainer.scrollHeight;
+
+                if (window.MathJax) {
+                    await MathJax.typesetPromise([stepDiv]);
+                }
+
+                F = next_F;
+                t = next_t;
+                stepCount++;
+
+                await sleep(delay);
+            }
+
+            animationInProgress = false;
+            document.getElementById('drawBtn').disabled = false;
+            document.getElementById('newBtn').disabled = false;
+            document.getElementById('stepSize').disabled = false;
+        }
+
+        function resetSimulationView() {
+            if (animationInProgress) return;
+            drawAxes();
+            drawExactCurve();
+            
+            document.getElementById('logContainer').style.display = 'none';
+            document.getElementById('calcList').innerHTML = '';
+        }
+
+        function generateNewProblem() {
+            if (animationInProgress) return;
+            currentProblem = generateRandomProblem();
+
+            document.getElementById('math-f').innerHTML = `\\( f(t) = ${currentProblem.fTex} \\)`;
+            document.getElementById('math-yprime').innerHTML = `\\( F'(t) = f(t) = ${currentProblem.fTex} \\)`;
+            document.getElementById('math-condition').innerHTML = `Condition initiale : \\( F(${formatNb(currentProblem.alpha)}) = ${formatNb(currentProblem.beta)} \\)`;
+            
+            document.getElementById('math-th').innerHTML = `\\( f(t_k) = ${currentProblem.fTexTk} \\)`;
+            
+            document.getElementById('math-t0').innerHTML = `\\( t_0 = ${formatNb(currentProblem.alpha)} \\)`;
+            document.getElementById('math-t1').innerHTML = `\\( t_1 = ${formatNb(currentProblem.alpha + 0.5)} \\)`;
+            document.getElementById('math-t2').innerHTML = `\\( t_2 = ${formatNb(currentProblem.alpha + 1.0)} \\)`;
+            document.getElementById('math-t3').innerHTML = `\\( t_3 = ${formatNb(currentProblem.alpha + 1.5)} \\)`;
+
+            document.getElementById('math-td-deriv').innerHTML = `\\( f(${formatNb(currentProblem.alpha)}) = ${currentProblem.fAlphaTex} \\)`;
+            document.getElementById('math-td-y').innerHTML = `\\( F(${formatNb(currentProblem.alpha + 0.5)}) = ${currentProblem.FNextTex} \\)`;
+
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+
+            showExact = false;
+            document.getElementById('showExactBtn').textContent = "Afficher la solution exacte";
+            resetSimulationView();
+        }
+
+        document.getElementById('drawBtn').addEventListener('click', animateEuler);
+        document.getElementById('stepSize').addEventListener('change', resetSimulationView);
+        document.getElementById('newBtn').addEventListener('click', generateNewProblem);
+        
+        document.getElementById('showExactBtn').addEventListener('click', function() {
+            if (animationInProgress) return;
+            showExact = !showExact;
+            this.textContent = showExact ? "Masquer la solution exacte" : "Afficher la solution exacte";
+            resetSimulationView();
+        });
+
+        window.onload = generateNewProblem;
+    </script>
+</body>
+</html>

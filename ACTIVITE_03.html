@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entraînement : Détermination de Primitives (STI2D)</title>
+    
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #2980b9;
+            --success: #27ae60;
+            --light: #ecf0f1;
+            --white: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .exercise-box {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-left: 5px solid var(--accent);
+            border-radius: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: var(--white);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        #newExoBtn { background-color: var(--accent); }
+        #correctionBtn { background-color: var(--success); }
+
+        /* Modal / Popup */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #7f8c8d;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        .close-btn:hover { color: #e74c3c; transform: none; }
+
+        .pedagogy-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        .pedagogy-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fafafa;
+            max-width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        .legend span { display: flex; align-items: center; gap: 5px; }
+        .color-f { width: 15px; height: 15px; background-color: #e74c3c; display: inline-block; border-radius:3px;}
+        .color-F { width: 15px; height: 15px; background-color: #2980b9; display: inline-block; border-radius:3px;}
+
+    </style>
+</head>
+<body>
+
+    <h1>Entraînement : Primitives (Spécialité STI2D)</h1>
+
+    <div class="container">
+        <h2>Exercice</h2>
+        <div id="exercise-content" class="exercise-box">
+            </div>
+        
+        <div class="btn-group">
+            <button id="newExoBtn">Générer un nouvel exercice aléatoire</button>
+            <button id="correctionBtn" style="display:none;">Afficher la correction détaillée</button>
+        </div>
+    </div>
+
+    <div id="correctionModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModal">&times;</button>
+            <h2 style="color: var(--success); border-bottom: 2px solid var(--success); padding-bottom: 10px;">Correction Détaillée</h2>
+            
+            <div id="correction-text">
+                </div>
+
+            <div class="pedagogy-box">
+                <span class="pedagogy-title">Interprétation géométrique (Canvas)</span>
+                Le graphique ci-dessous illustre la fonction \( f \) et l'une de ses primitives \( F \) (en choisissant la constante \( C = 0 \) ou celle calculée). 
+                En tout point, l'ordonnée de \( f \) correspond au coefficient directeur de la tangente à la courbe de \( F \).
+            </div>
+            
+            <canvas id="mathCanvas" width="600" height="300"></canvas>
+            <div class="legend">
+                <span><div class="color-f"></div> Fonction \( f(t) \)</span>
+                <span><div class="color-F"></div> Primitive \( F(t) \)</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Utilitaires ---
+        function randInt(min, max, nonZero = false) {
+            let val = Math.floor(Math.random() * (max - min + 1)) + min;
+            if (nonZero && val === 0) return randInt(min, max, nonZero);
+            return val;
+        }
+
+        function formatPolyTerm(coeff, power, isFirst = false) {
+            if (coeff === 0) return "";
+            let sign = coeff > 0 ? (isFirst ? "" : "+") : "-";
+            let absCoeff = Math.abs(coeff);
+            let coeffStr = (absCoeff === 1 && power !== 0) ? "" : absCoeff;
+            
+            if (power === 0) return `${sign} ${absCoeff} `;
+            if (power === 1) return `${sign} ${coeffStr}t `;
+            return `${sign} ${coeffStr}t^{${power}} `;
+        }
+
+        // Rappels pédagogiques standards
+        const RAPPEL_POLY = `
+            <div class="pedagogy-box">
+                <span class="pedagogy-title">Propriété (Primitives d'un polynôme)</span>
+                Pour tout entier naturel \( n \), la fonction \( t \mapsto t^n \) admet pour primitives sur \( \\mathbb{R} \) les fonctions de la forme \( t \mapsto \\dfrac{t^{n+1}}{n+1} + C \), avec \( C \\in \\mathbb{R} \).<br>
+                <em>Règle de linéarité :</em> La primitive d'une somme est la somme des primitives.
+            </div>`;
+        const RAPPEL_TRIG_COS = `
+            <div class="pedagogy-box">
+                <span class="pedagogy-title">Théorème (Fonctions sinusoïdales)</span>
+                Si \( f(t) = A \\cos(\\omega t + \\varphi) \) avec \( \\omega \\neq 0 \), alors les primitives de \( f \) sur \( \\mathbb{R} \) sont de la forme \( F(t) = \\dfrac{A}{\\omega} \\sin(\\omega t + \\varphi) + C \).
+            </div>`;
+        const RAPPEL_TRIG_SIN = `
+            <div class="pedagogy-box">
+                <span class="pedagogy-title">Théorème (Fonctions sinusoïdales)</span>
+                Si \( f(t) = A \\sin(\\omega t + \\varphi) \) avec \( \\omega \\neq 0 \), alors les primitives de \( f \) sur \( \\mathbb{R} \) sont de la forme \( F(t) = -\\dfrac{A}{\\omega} \\cos(\\omega t + \\varphi) + C \).
+            </div>`;
+        const RAPPEL_CI = `
+            <div class="pedagogy-box">
+                <span class="pedagogy-title">Définition et Théorème (Problème de Cauchy)</span>
+                Deux primitives d'une même fonction diffèrent d'une constante. <br>
+                Pour une fonction \( f \) donnée, et deux réels \( t_0 \) et \( y_0 \), il existe une <strong>unique</strong> primitive \( F \) vérifiant la condition initiale \( F(t_0) = y_0 \). Cette condition permet de déterminer la valeur exacte de la constante \( C \).
+            </div>`;
+
+        // --- Définition des types d'exercices ---
+        const exercises = [
+            // 1. Constante
+            () => {
+                let k = randInt(-10, 10, true);
+                return {
+                    statement: `Déterminer l'ensemble des primitives de la fonction constante définie sur \\(\\mathbb{R}\\) par : \\[ f(t) = ${k} \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        Ici, la fonction est une constante. On peut la voir comme \( f(t) = ${k}t^0 \).
+                        En appliquant la règle, on obtient :
+                        \\[ F(t) = ${k}t + C \\quad \\text{avec } C \\in \\mathbb{R} \\]`,
+                    f: (t) => k,
+                    F: (t) => k * t
+                };
+            },
+            // 2. Linéaire simple
+            () => {
+                let a = randInt(-8, 8, true);
+                return {
+                    statement: `Déterminer l'ensemble des primitives de la fonction définie sur \\(\\mathbb{R}\\) par : \\[ f(t) = ${formatPolyTerm(a, 1, true)} \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        On applique la formule pour \( n=1 \). La primitive de \( t \) est \( \\dfrac{t^2}{2} \).
+                        On multiplie par la constante \( ${a} \) :
+                        \\[ F(t) = \\dfrac{${a}}{2}t^2 + C \\quad \\text{avec } C \\in \\mathbb{R} \\]`,
+                    f: (t) => a * t,
+                    F: (t) => (a / 2) * t * t
+                };
+            },
+            // 3. Affine
+            () => {
+                let a = randInt(-5, 5, true); let b = randInt(-10, 10, true);
+                return {
+                    statement: `Déterminer l'ensemble des primitives de la fonction affine définie sur \\(\\mathbb{R}\\) par : \\[ f(t) = ${formatPolyTerm(a, 1, true)} ${formatPolyTerm(b, 0)} \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        Par linéarité, on intègre terme à terme :
+                        - Primitive de \( ${formatPolyTerm(a, 1, true)} \) : \( \\dfrac{${a}}{2}t^2 \)
+                        - Primitive de \( ${formatPolyTerm(b, 0, true)} \) : \( ${b}t \)
+                        D'où :
+                        \\[ F(t) = \\dfrac{${a}}{2}t^2 ${formatPolyTerm(b, 1)} + C \\quad \\text{avec } C \\in \\mathbb{R} \\]`,
+                    f: (t) => a * t + b,
+                    F: (t) => (a / 2) * t * t + b * t
+                };
+            },
+            // 4. Monôme degré 2
+            () => {
+                let a = randInt(-6, 6, true) * 3;
+                return {
+                    statement: `Déterminer les primitives de la fonction définie sur \\(\\mathbb{R}\\) par : \\[ f(t) = ${formatPolyTerm(a, 2, true)} \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        Avec \( n=2 \), la primitive de \( t^2 \) est \( \\dfrac{t^3}{3} \).
+                        \\[ F(t) = ${a} \\times \\dfrac{t^3}{3} + C = ${a/3}t^3 + C \\quad \\text{avec } C \\in \\mathbb{R} \\]`,
+                    f: (t) => a * t * t,
+                    F: (t) => (a / 3) * t * t * t
+                };
+            },
+            // 5. Binôme degré 2
+            () => {
+                let a = randInt(-3, 4, true) * 3; let c = randInt(-5, 5, true);
+                return {
+                    statement: `Déterminer les primitives de la fonction définie par : \\[ f(t) = ${formatPolyTerm(a, 2, true)} ${formatPolyTerm(c, 0)} \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        \\[ F(t) = ${a/3}t^3 ${formatPolyTerm(c, 1)} + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => a * t * t + c,
+                    F: (t) => (a / 3) * t * t * t + c * t
+                };
+            },
+            // 6. Trinôme complet
+            () => {
+                let a = randInt(1, 4) * 3; let b = randInt(-4, 4, true) * 2; let c = randInt(-10, 10, true);
+                return {
+                    statement: `Soit la fonction polynomiale du second degré : \\[ f(t) = ${formatPolyTerm(a, 2, true)} ${formatPolyTerm(b, 1)} ${formatPolyTerm(c, 0)} \\] Déterminer la forme générale de ses primitives.`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        On traite chaque terme :
+                        - Pour \( ${a}t^2 \) : \( ${a/3}t^3 \)
+                        - Pour \( ${formatPolyTerm(b,1)} \) : \( ${b/2}t^2 \)
+                        - Pour \( ${formatPolyTerm(c,0)} \) : \( ${c}t \)
+                        \\[ F(t) = ${a/3}t^3 ${formatPolyTerm(b/2, 2)} ${formatPolyTerm(c, 1)} + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => a*t*t + b*t + c,
+                    F: (t) => (a/3)*t*t*t + (b/2)*t*t + c*t
+                };
+            },
+            // 7. Monôme degré 3
+            () => {
+                let a = randInt(-2, 3, true) * 4;
+                return {
+                    statement: `Déterminer les primitives de : \\[ f(t) = ${formatPolyTerm(a, 3, true)} \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        La primitive de \( t^3 \) est \( \\dfrac{t^4}{4} \).
+                        \\[ F(t) = ${a/4}t^4 + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => a*Math.pow(t, 3),
+                    F: (t) => (a/4)*Math.pow(t, 4)
+                };
+            },
+            // 8. Polynôme de degré 3 complet
+            () => {
+                let a = 4; let b = -6; let c = 2; let d = -1;
+                return {
+                    statement: `Trouver l'ensemble des primitives de : \\[ f(t) = 4t^3 - 6t^2 + 2t - 1 \\]`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        \\[ F(t) = \\dfrac{4}{4}t^4 - \\dfrac{6}{3}t^3 + \\dfrac{2}{2}t^2 - 1t + C \\]
+                        Après simplification :
+                        \\[ F(t) = t^4 - 2t^3 + t^2 - t + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => 4*Math.pow(t,3) - 6*t*t + 2*t - 1,
+                    F: (t) => Math.pow(t,4) - 2*Math.pow(t,3) + t*t - t
+                };
+            },
+            // 9. Cosinus simple
+            () => {
+                let w = randInt(2, 5); let A = randInt(2, 6);
+                return {
+                    statement: `Déterminer les primitives de la fonction sinusoïdale : \\[ f(t) = ${A} \\cos(${w}t) \\]`,
+                    correction: `
+                        ${RAPPEL_TRIG_COS}
+                        Ici, l'amplitude est \( A = ${A} \), la pulsation est \( \\omega = ${w} \) et la phase à l'origine \( \\varphi = 0 \).
+                        \\[ F(t) = \\dfrac{${A}}{${w}} \\sin(${w}t) + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => A * Math.cos(w * t),
+                    F: (t) => (A / w) * Math.sin(w * t)
+                };
+            },
+            // 10. Sinus simple
+            () => {
+                let w = randInt(2, 5); let A = randInt(2, 6);
+                return {
+                    statement: `Déterminer les primitives de : \\[ f(t) = ${A} \\sin(${w}t) \\]`,
+                    correction: `
+                        ${RAPPEL_TRIG_SIN}
+                        Ici \( A = ${A} \), \( \\omega = ${w} \). Attention au signe "moins" qui apparaît !
+                        \\[ F(t) = -\\dfrac{${A}}{${w}} \\cos(${w}t) + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => A * Math.sin(w * t),
+                    F: (t) => -(A / w) * Math.cos(w * t)
+                };
+            },
+            // 11. Cosinus avec phase
+            () => {
+                let w = randInt(2, 4); let A = randInt(3, 8);
+                return {
+                    statement: `Déterminer les primitives de : \\[ f(t) = ${A} \\cos\\left(${w}t + \\dfrac{\\pi}{4}\\right) \\]`,
+                    correction: `
+                        ${RAPPEL_TRIG_COS}
+                        Ici \( A = ${A} \), \( \\omega = ${w} \) et \( \\varphi = \\dfrac{\\pi}{4} \).
+                        \\[ F(t) = \\dfrac{${A}}{${w}} \\sin\\left(${w}t + \\dfrac{\\pi}{4}\\right) + C \\]`,
+                    f: (t) => A * Math.cos(w * t + Math.PI/4),
+                    F: (t) => (A / w) * Math.sin(w * t + Math.PI/4)
+                };
+            },
+            // 12. Sinus avec phase
+            () => {
+                let w = randInt(2, 5); let A = randInt(2, 5);
+                return {
+                    statement: `Déterminer les primitives de : \\[ f(t) = ${A} \\sin\\left(${w}t - \\dfrac{\\pi}{3}\\right) \\]`,
+                    correction: `
+                        ${RAPPEL_TRIG_SIN}
+                        Ici \( A = ${A} \), \( \\omega = ${w} \) et \( \\varphi = -\\dfrac{\\pi}{3} \).
+                        \\[ F(t) = -\\dfrac{${A}}{${w}} \\cos\\left(${w}t - \\dfrac{\\pi}{3}\\right) + C \\]`,
+                    f: (t) => A * Math.sin(w * t - Math.PI/3),
+                    F: (t) => -(A / w) * Math.cos(w * t - Math.PI/3)
+                };
+            },
+            // 13. Mélange Poly + Cos
+            () => {
+                let a = randInt(2, 4); let w = randInt(2, 3);
+                return {
+                    statement: `Soit la fonction définie par : \\[ f(t) = ${a}t + \\cos(${w}t) \\]. Déterminer ses primitives.`,
+                    correction: `
+                        <div class="pedagogy-box">
+                            <span class="pedagogy-title">Propriété : Linéarité de l'intégration</span>
+                            La primitive d'une somme est égale à la somme des primitives. On peut donc traiter la partie polynomiale et la partie trigonométrique séparément.
+                        </div>
+                        - Primitive de \( ${a}t \) : \( \\dfrac{${a}}{2}t^2 \) <br>
+                        - Primitive de \( \\cos(${w}t) \) : \( \\dfrac{1}{${w}} \\sin(${w}t) \) <br>
+                        \\[ F(t) = \\dfrac{${a}}{2}t^2 + \\dfrac{1}{${w}} \\sin(${w}t) + C \\]`,
+                    f: (t) => a*t + Math.cos(w*t),
+                    F: (t) => (a/2)*t*t + (1/w)*Math.sin(w*t)
+                };
+            },
+            // 14. Condition initiale - Affine
+            () => {
+                let a = 2; let b = 3; let y0 = randInt(0, 5);
+                return {
+                    statement: `Déterminer l'unique primitive \\( F \\) de la fonction \\( f(t) = ${a}t + ${b} \\) qui vérifie la condition initiale \\( F(0) = ${y0} \\).`,
+                    correction: `
+                        ${RAPPEL_CI}
+                        1. Forme générale des primitives :
+                        \\[ F(t) = t^2 + ${b}t + C \\]
+                        2. Utilisation de la condition initiale \( F(0) = ${y0} \) :
+                        \\[ F(0) = 0^2 + ${b}(0) + C = C \\]
+                        Donc \( C = ${y0} \).
+                        \\[ F(t) = t^2 + ${b}t + ${y0} \\]`,
+                    f: (t) => a*t + b,
+                    F: (t) => t*t + b*t + y0
+                };
+            },
+            // 15. Condition initiale - Trigonométrique
+            () => {
+                let A = 4; let w = 2; let y0 = 5;
+                return {
+                    statement: `Déterminer l'unique primitive \\( F \\) de \\( f(t) = ${A} \\sin(${w}t) \\) telle que \\( F(0) = ${y0} \\).`,
+                    correction: `
+                        ${RAPPEL_CI}
+                        1. Forme générale :
+                        \\[ F(t) = -\\dfrac{${A}}{${w}} \\cos(${w}t) + C = -${A/w} \\cos(${w}t) + C \\]
+                        2. On applique la condition \( F(0) = ${y0} \) :
+                        On sait que \( \\cos(0) = 1 \).
+                        \\[ F(0) = -${A/w}(1) + C = -${A/w} + C \\]
+                        Donc \( -${A/w} + C = ${y0} \\implies C = ${y0 + A/w} \).
+                        \\[ F(t) = -${A/w} \\cos(${w}t) + ${y0 + A/w} \\]`,
+                    f: (t) => A * Math.sin(w*t),
+                    F: (t) => -(A/w) * Math.cos(w*t) + (y0 + A/w)
+                };
+            },
+            // 16. Degré élevé (n > 3)
+            () => {
+                let n = randInt(4, 6); let a = n + 1; // pour avoir un coeff rond
+                return {
+                    statement: `Soit \\( f(t) = ${a} t^{${n}} \\). Déterminer les primitives de \\( f \\).`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        Avec \( n = ${n} \), la primitive de \( t^{${n}} \) est \( \\dfrac{t^{${n+1}}}{${n+1}} \).
+                        \\[ F(t) = ${a} \\times \\dfrac{t^{${n+1}}}{${n+1}} + C = t^{${n+1}} + C \\]`,
+                    f: (t) => a * Math.pow(t, n),
+                    F: (t) => Math.pow(t, n + 1)
+                };
+            },
+            // 17. Coefficients fractionnaires
+            () => {
+                return {
+                    statement: `Déterminer les primitives de \\( f(t) = \\dfrac{3}{2} t^2 - \\dfrac{1}{4} t \\).`,
+                    correction: `
+                        ${RAPPEL_POLY}
+                        On garde les fractions multiplicatives intactes :
+                        - Terme 1 : \( \\dfrac{3}{2} \\times \\dfrac{t^3}{3} = \\dfrac{1}{2} t^3 \)
+                        - Terme 2 : \( -\\dfrac{1}{4} \\times \\dfrac{t^2}{2} = -\\dfrac{1}{8} t^2 \)
+                        \\[ F(t) = \\dfrac{1}{2} t^3 - \\dfrac{1}{8} t^2 + C \\]`,
+                    f: (t) => 1.5 * t*t - 0.25 * t,
+                    F: (t) => 0.5 * t*t*t - 0.125 * t*t
+                };
+            },
+            // 18. Amplitude négative
+            () => {
+                let A = randInt(2, 5); let w = randInt(2, 4);
+                return {
+                    statement: `Trouver l'ensemble des primitives de \\( f(t) = -${A} \\cos(${w}t) \\).`,
+                    correction: `
+                        ${RAPPEL_TRIG_COS}
+                        Le coefficient multiplicatif est \( -${A} \).
+                        \\[ F(t) = -\\dfrac{${A}}{${w}} \\sin(${w}t) + C \\]`,
+                    f: (t) => -A * Math.cos(w*t),
+                    F: (t) => -(A/w) * Math.sin(w*t)
+                };
+            },
+            // 19. Somme Sin et Cos
+            () => {
+                let A = 2; let B = 3; let w = 2;
+                return {
+                    statement: `Déterminer les primitives de la fonction : \\[ f(t) = ${A} \\cos(${w}t) - ${B} \\sin(${w}t) \\]`,
+                    correction: `
+                        <div class="pedagogy-box">
+                            <span class="pedagogy-title">Combinaison linéaire</span>
+                            On applique les deux théorèmes des fonctions sinusoïdales simultanément.
+                        </div>
+                        - Primitive de \( ${A} \\cos(${w}t) \) : \( \\dfrac{${A}}{${w}} \\sin(${w}t) \) <br>
+                        - Primitive de \( -${B} \\sin(${w}t) \) : \( -${B} \\times \\left(-\\dfrac{1}{${w}} \\cos(${w}t)\\right) = \\dfrac{${B}}{${w}} \\cos(${w}t) \) <br>
+                        \\[ F(t) = ${A/w} \\sin(${w}t) + ${B/w} \\cos(${w}t) + C \\]`,
+                    f: (t) => A * Math.cos(w*t) - B * Math.sin(w*t),
+                    F: (t) => (A/w) * Math.sin(w*t) + (B/w) * Math.cos(w*t)
+                };
+            },
+            // 20. Problème de Cauchy - Degré 2 avec F(1)
+            () => {
+                let a = 3; let b = -4; let c = 1; let y1 = 2;
+                return {
+                    statement: `Trouver l'unique primitive \\( F \\) de \\( f(t) = ${a}t^2 ${b}t + ${c} \\) vérifiant \\( F(1) = ${y1} \\).`,
+                    correction: `
+                        ${RAPPEL_CI}
+                        1. Forme générale :
+                        \\[ F(t) = t^3 - 2t^2 + t + C \\]
+                        2. Condition initiale en \( t = 1 \) :
+                        \\[ F(1) = (1)^3 - 2(1)^2 + 1 + C = 1 - 2 + 1 + C = C \\]
+                        Puisque \( F(1) = ${y1} \), on a \( C = ${y1} \).
+                        \\[ F(t) = t^3 - 2t^2 + t + ${y1} \\]`,
+                    f: (t) => a*t*t + b*t + c,
+                    F: (t) => Math.pow(t,3) - 2*t*t + t + y1
+                };
+            },
+            // 21. Trinôme + Sinus
+            () => {
+                let a = randInt(1, 3)*3; let b = randInt(-4, 4, true)*2; let A = randInt(2, 5); let w = randInt(2, 4);
+                return {
+                    statement: `Déterminer les primitives de la fonction : \\[ f(t) = ${formatPolyTerm(a, 2, true)} ${formatPolyTerm(b, 1)} + ${A}\\sin(${w}t) \\]`,
+                    correction: `
+                        <div class="pedagogy-box">
+                            <span class="pedagogy-title">Linéarité (Polynômes et Trigonométrie)</span>
+                            On intègre séparément la partie polynomiale et la partie trigonométrique en appliquant les règles associées.
+                        </div>
+                        - Primitive de \\( ${a}t^2 \\) : \\( ${a/3}t^3 \\) <br>
+                        - Primitive de \\( ${formatPolyTerm(b, 1)} \\) : \\( ${b/2}t^2 \\) <br>
+                        - Primitive de \\( ${A}\\sin(${w}t) \\) : \\( -\\dfrac{${A}}{${w}}\\cos(${w}t) \\) <br>
+                        \\[ F(t) = ${a/3}t^3 ${formatPolyTerm(b/2, 2)} - \\dfrac{${A}}{${w}}\\cos(${w}t) + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => a*t*t + b*t + A*Math.sin(w*t),
+                    F: (t) => (a/3)*t*t*t + (b/2)*t*t - (A/w)*Math.cos(w*t)
+                };
+            },
+            // 22. Monôme de degré 3 + Cosinus avec déphasage
+            () => {
+                let a = randInt(1, 3)*4; let A = randInt(2, 6); let w = randInt(2, 3);
+                return {
+                    statement: `Déterminer les primitives de la fonction : \\[ f(t) = ${formatPolyTerm(a, 3, true)} - ${A}\\cos\\left(${w}t + \\dfrac{\\pi}{2}\\right) \\]`,
+                    correction: `
+                        <div class="pedagogy-box">
+                            <span class="pedagogy-title">Combinaison Linéaire</span>
+                            On procède terme à terme.
+                        </div>
+                        - Primitive de \\( ${a}t^3 \\) : \\( ${a/4}t^4 \\) <br>
+                        - Primitive de \\( -${A}\\cos\\left(${w}t + \\dfrac{\\pi}{2}\\right) \\) : \\( -\\dfrac{${A}}{${w}}\\sin\\left(${w}t + \\dfrac{\\pi}{2}\\right) \\) <br>
+                        \\[ F(t) = ${a/4}t^4 - \\dfrac{${A}}{${w}}\\sin\\left(${w}t + \\dfrac{\\pi}{2}\\right) + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => a*Math.pow(t, 3) - A*Math.cos(w*t + Math.PI/2),
+                    F: (t) => (a/4)*Math.pow(t, 4) - (A/w)*Math.sin(w*t + Math.PI/2)
+                };
+            },
+            // 23. Condition Initiale: Affine + Sinus
+            () => {
+                let a = 4; let b = -2; let A = 3; let w = 2; let y0 = 1;
+                return {
+                    statement: `Déterminer l'unique primitive \\( F \\) de la fonction \\( f(t) = ${a}t ${b} + ${A}\\sin(${w}t) \\) qui vérifie la condition initiale \\( F(0) = ${y0} \\).`,
+                    correction: `
+                        ${RAPPEL_CI}
+                        1. Forme générale des primitives :<br>
+                        - Primitive de \\( ${a}t \\) : \\( 2t^2 \\) <br>
+                        - Primitive de \\( ${b} \\) : \\( ${b}t \\) <br>
+                        - Primitive de \\( ${A}\\sin(${w}t) \\) : \\( -\\dfrac{${A}}{${w}}\\cos(${w}t) = -1.5\\cos(${w}t) \\) <br>
+                        \\[ F(t) = 2t^2 - 2t - 1.5\\cos(2t) + C \\]
+                        2. Utilisation de la condition initiale \\( F(0) = ${y0} \\) :<br>
+                        On sait que \\( \\cos(0) = 1 \\).<br>
+                        \\[ F(0) = 2(0)^2 - 2(0) - 1.5(1) + C = -1.5 + C \\]
+                        Donc \\( -1.5 + C = ${y0} \\implies C = ${y0 + 1.5} \\).<br>
+                        \\[ F(t) = 2t^2 - 2t - 1.5\\cos(2t) + ${y0 + 1.5} \\]`,
+                    f: (t) => a*t + b + A*Math.sin(w*t),
+                    F: (t) => (a/2)*t*t + b*t - (A/w)*Math.cos(w*t) + (y0 + A/w)
+                };
+            },
+            // 24. Constante + Cos + Sin
+            () => {
+                let k = randInt(-5, 5, true); let A = randInt(2, 4); let B = randInt(2, 4); let w = 2;
+                return {
+                    statement: `Déterminer les primitives de : \\[ f(t) = ${k} + ${A}\\cos(${w}t) + ${B}\\sin(${w}t) \\]`,
+                    correction: `
+                        <div class="pedagogy-box">
+                            <span class="pedagogy-title">Superposition de fonctions</span>
+                            On intègre la constante polynomiale et les deux fonctions trigonométriques.
+                        </div>
+                        - Primitive de \\( ${k} \\) : \\( ${k}t \\) <br>
+                        - Primitive de \\( ${A}\\cos(${w}t) \\) : \\( \\dfrac{${A}}{${w}}\\sin(${w}t) \\) <br>
+                        - Primitive de \\( ${B}\\sin(${w}t) \\) : \\( -\\dfrac{${B}}{${w}}\\cos(${w}t) \\) <br>
+                        \\[ F(t) = ${k}t + ${A/w}\\sin(${w}t) - ${B/w}\\cos(${w}t) + C \\quad (C \\in \\mathbb{R}) \\]`,
+                    f: (t) => k + A*Math.cos(w*t) + B*Math.sin(w*t),
+                    F: (t) => k*t + (A/w)*Math.sin(w*t) - (B/w)*Math.cos(w*t)
+                };
+            },
+            // 25. Condition Initiale: Binôme + Cos
+            () => {
+                let a = 3; let c = 2; let A = 4; let w = 2; let y0 = 3;
+                return {
+                    statement: `Trouver l'unique primitive \\( F \\) de \\( f(t) = ${a}t^2 + ${c} - ${A}\\cos(${w}t) \\) telle que \\( F(0) = ${y0} \\).`,
+                    correction: `
+                        ${RAPPEL_CI}
+                        1. Forme générale des primitives :<br>
+                        - Primitive de \\( ${a}t^2 \\) : \\( t^3 \\) <br>
+                        - Primitive de \\( ${c} \\) : \\( ${c}t \\) <br>
+                        - Primitive de \\( -${A}\\cos(${w}t) \\) : \\( -\\dfrac{${A}}{${w}}\\sin(${w}t) = -2\\sin(${w}t) \\) <br>
+                        \\[ F(t) = t^3 + 2t - 2\\sin(2t) + C \\]
+                        2. On applique la condition \\( F(0) = ${y0} \\) :<br>
+                        On sait que \\( \\sin(0) = 0 \\).<br>
+                        \\[ F(0) = (0)^3 + 2(0) - 2(0) + C = C \\]
+                        Puisque \\( F(0) = ${y0} \\), on a directement \\( C = ${y0} \\).<br>
+                        \\[ F(t) = t^3 + 2t - 2\\sin(2t) + ${y0} \\]`,
+                    f: (t) => a*t*t + c - A*Math.cos(w*t),
+                    F: (t) => Math.pow(t,3) + c*t - (A/w)*Math.sin(w*t) + y0
+                };
+            }
+        ];
+
+        let currentExo = null;
+
+        const exerciseContent = document.getElementById('exercise-content');
+        const newExoBtn = document.getElementById('newExoBtn');
+        const correctionBtn = document.getElementById('correctionBtn');
+        const correctionModal = document.getElementById('correctionModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const correctionText = document.getElementById('correction-text');
+        const canvas = document.getElementById('mathCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawGraph(f, F) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 30;
+            
+            ctx.clearRect(0, 0, width, height);
+
+            // Axes
+            ctx.beginPath();
+            ctx.strokeStyle = "#95a5a6";
+            ctx.lineWidth = 1;
+            // Axe X
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            // Axe Y
+            ctx.moveTo(width / 2, 0);
+            ctx.lineTo(width / 2, height);
+            ctx.stroke();
+
+            // Paramètres de tracé
+            const scaleX = 40; // Pixels per unit X
+            const scaleY = 15; // Pixels per unit Y
+            const minT = - (width / 2) / scaleX;
+            const maxT = (width / 2) / scaleX;
+
+            function plot(func, color) {
+                ctx.beginPath();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                let first = true;
+                
+                for (let px = 0; px <= width; px += 2) {
+                    let t = minT + (px / width) * (maxT - minT);
+                    let y = func(t);
+                    
+                    // Sécurité pour éviter les tracés infinis
+                    if (y > 100 || y < -100) continue;
+
+                    let py = height / 2 - y * scaleY;
+
+                    if (first) {
+                        ctx.moveTo(px, py);
+                        first = false;
+                    } else {
+                        ctx.lineTo(px, py);
+                    }
+                }
+                ctx.stroke();
+            }
+
+            // Tracer F(t) en bleu
+            plot(F, "#2980b9");
+            // Tracer f(t) en rouge
+            plot(f, "#e74c3c");
+        }
+
+        function generateExercise() {
+            // Cacher la modale si ouverte et le bouton correction
+            correctionModal.style.display = 'none';
+            correctionBtn.style.display = 'inline-block';
+
+            // Choisir un exercice au hasard parmi les 25
+            const randomIndex = Math.floor(Math.random() * exercises.length);
+            currentExo = exercises[randomIndex]();
+
+            // Mettre à jour l'énoncé
+            exerciseContent.innerHTML = currentExo.statement;
+            
+            // Rendre le LaTeX
+            MathJax.typesetPromise([exerciseContent]);
+        }
+
+        function showCorrection() {
+            if (!currentExo) return;
+
+            correctionText.innerHTML = currentExo.correction;
+            MathJax.typesetPromise([correctionText]).then(() => {
+                correctionModal.style.display = 'flex';
+                // Dessiner les courbes sur le canvas
+                drawGraph(currentExo.f, currentExo.F);
+            });
+        }
+
+        // Événements
+        newExoBtn.addEventListener('click', generateExercise);
+        correctionBtn.addEventListener('click', showCorrection);
+        closeModalBtn.addEventListener('click', () => {
+            correctionModal.style.display = 'none';
+        });
+
+        // Fermer la modale si on clique en dehors
+        window.addEventListener('click', (e) => {
+            if (e.target === correctionModal) {
+                correctionModal.style.display = 'none';
+            }
+        });
+
+        // Générer le premier exercice au chargement
+        window.onload = generateExercise;
+
+    </script>
+</body>
+</html>
