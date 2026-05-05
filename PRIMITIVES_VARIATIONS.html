@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variations d'une primitive - Exercice dynamique</title>
+    
+    <!-- Configuration MathJax 3 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --f-color: #ef4444;
+            --F-color: #3b82f6;
+            --border: #cbd5e1;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Mode Accessibilité (Dys et Malvoyants) */
+        body.accessible-mode {
+            --font-main: 'Comic Sans MS', sans-serif;
+            font-size: 1.25rem;
+            line-height: 2;
+            letter-spacing: 0.05em;
+            word-spacing: 0.1em;
+        }
+
+        body.accessible-mode .problem-box {
+            font-size: 1.4rem;
+            border-left-width: 10px;
+        }
+
+        body.accessible-mode .step strong {
+            font-size: 1.5rem;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+            transition: font-size 0.2s ease, line-height 0.2s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .problem-box {
+            background: #f1f5f9;
+            border-left: 6px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.15rem;
+        }
+
+        .student-answers {
+            background: #e0f2fe;
+            border-left: 6px solid #0284c7;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: flex;
+            flex-direction: column;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            padding: 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            width: 180px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-secondary { background: white; color: var(--accent); border: 2px solid var(--accent); }
+        .btn-access { background: #0f172a; color: #f8fafc; }
+        .btn-access.active { background: #22c55e; }
+        .btn-copy { background: #e2e8f0; color: #475569; font-size: 0.85rem; }
+        .btn-json { background: #0284c7; color: white; border: none; }
+
+        /* Correction MathJax invisible (Remplacement de display:none) */
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+            pointer-events: none;
+        }
+
+        .solution { margin-top: 2rem; border-top: 2px solid #e2e8f0; padding-top: 2rem; }
+
+        .step {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .step-pedagogy {
+            background: #fdf8f6;
+            border-color: #fbd5c8;
+        }
+
+        .step strong {
+            display: block;
+            color: var(--accent);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .step ul { margin-left: 2rem; margin-bottom: 1rem; }
+        .step li { margin-bottom: 0.5rem; }
+
+        .table-container {
+            margin: 1.5rem 0;
+            padding: 1rem 0;
+            background: #fff;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* --- NOUVEAU STYLE OPTIMISÉ POUR LE TABLEAU DE VARIATIONS --- */
+        .tkz-table {
+            width: 100%;
+            min-width: 600px;
+            max-width: 800px;
+            border-collapse: collapse;
+            font-size: 1.15rem;
+            border: 1px solid var(--text);
+            background: #ffffff;
+        }
+        .tkz-table td {
+            border: none;
+            border-bottom: 1px solid var(--text);
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+        }
+        .tkz-table tr:last-child td {
+            border-bottom: none;
+        }
+        .label-col {
+            border-right: 1px solid var(--text) !important;
+            font-weight: 600;
+            background: #f8fafc;
+            width: 80px;
+        }
+        .row-variations {
+            height: 160px;
+        }
+        .val-top {
+            vertical-align: top;
+            padding-top: 1rem !important;
+        }
+        .val-bot {
+            vertical-align: bottom;
+            padding-bottom: 1rem !important;
+        }
+        .cell-arrow {
+            vertical-align: middle;
+            font-size: 1.6rem;
+            color: #475569;
+        }
+        /* ------------------------------------------------------------ */
+
+        .canvas-container {
+            margin-top: 2rem;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+        }
+        canvas { width: 100%; height: auto; border-radius: 4px; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: white; padding: 2.5rem; border-radius: 16px;
+            max-width: 700px; width: 90%; position: relative;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; }
+
+        @media screen and (max-width: 600px) {
+            .card { padding: 1.5rem; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <main class="card">
+        <h1>📈 Variations d'une primitive</h1>
+        <p class="subtitle">Analyse rigoureuse · Mode accessible inclus</p>
+
+        <div id="problem-container" class="problem-box" aria-live="polite">
+            <!-- Dynamiquement généré -->
+        </div>
+
+        <div class="student-answers">
+            <h3 style="font-size: 1.2rem; color: #0369a1; margin-bottom: 0.5rem;">📝 Validation des résultats</h3>
+            <p style="font-size: 0.95rem;">Entrez vos résultats pour générer votre fichier de suivi (JSON) avant de consulter le corrigé complet.</p>
+            <div class="input-group">
+                <label>Racine 1 (la plus petite)<input type="text" id="ans-r1" placeholder="ex: -2 ou -1/3"></label>
+                <label>Racine 2 (la plus grande)<input type="text" id="ans-r2" placeholder="ex: 0"></label>
+                <label>Constante \(C\)<input type="text" id="ans-c" placeholder="ex: 9/2"></label>
+            </div>
+            <button class="btn btn-json" id="generate-json-btn">💾 Télécharger mes réponses (JSON)</button>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-access" id="toggle-dys-btn" title="Activer le mode accessibilité pour malvoyants et dyslexiques">♿ Accessibilité</button>
+            <button class="btn" id="new-problem-btn">🎲 Nouveau problème</button>
+            <button class="btn btn-secondary" id="toggle-solution-btn">🔍 Afficher la correction</button>
+            <button class="btn btn-copy" id="copyright-btn">Droits d'auteur</button>
+        </div>
+
+        <div id="solution-container" class="solution visually-hidden">
+            <div id="solution-steps"></div>
+            <div class="canvas-container">
+                <canvas id="graph-canvas" width="800" height="500"></canvas>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="copyright-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" id="close-modal">&times;</span>
+        <div id="copyright-text"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        class Fraction {
+            constructor(num, den = 1) {
+                if (den < 0) { num = -num; den = -den; }
+                const g = Fraction.gcd(Math.abs(num), Math.abs(den));
+                this.num = num / g;
+                this.den = den / g;
+            }
+            static gcd(a, b) { return b === 0 ? a : Fraction.gcd(b, a % b); }
+            static fromInt(n) { return new Fraction(n, 1); }
+            add(other) { return new Fraction(this.num * other.den + other.num * this.den, this.den * other.den); }
+            sub(other) { return new Fraction(this.num * other.den - other.num * this.den, this.den * other.den); }
+            mul(other) { return new Fraction(this.num * other.num, this.den * other.den); }
+            pow(n) {
+                if (n === 0) return Fraction.fromInt(1);
+                let res = Fraction.fromInt(1);
+                for(let i=0; i<Math.abs(n); i++) res = res.mul(this);
+                return n < 0 ? new Fraction(res.den, res.num) : res;
+            }
+            toString() {
+                if (this.den === 1) return `${this.num}`;
+                if (this.num === 0) return '0';
+                return `\\dfrac{${this.num}}{${this.den}}`;
+            }
+            valueOf() { return this.num / this.den; }
+        }
+
+        let params = {};
+        let solutionVisible = false;
+        let accessibleMode = false;
+
+        const probBox = document.getElementById('problem-container');
+        const solContainer = document.getElementById('solution-container');
+        const solSteps = document.getElementById('solution-steps');
+        const toggleBtn = document.getElementById('toggle-solution-btn');
+        const dysBtn = document.getElementById('toggle-dys-btn');
+        const canvas = document.getElementById('graph-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function randomInt(min, max, nonZero = false) {
+            let v;
+            do { v = Math.floor(Math.random() * (max - min + 1)) + min; } while (nonZero && v === 0);
+            return v;
+        }
+
+        function generateParams() {
+            return {
+                a: randomInt(-5, 5, true),
+                b: randomInt(-8, 8, true),
+                c: randomInt(-3, 3),
+                d: randomInt(-8, 8)
+            };
+        }
+
+        function formatFx(a, b) {
+            let s = (a === 1) ? "x^2" : (a === -1) ? "-x^2" : `${a}x^2`;
+            if (b > 0) s += ` + ${b === 1 ? "" : b}x`;
+            else if (b < 0) s += ` - ${Math.abs(b) === 1 ? "" : Math.abs(b)}x`;
+            return s;
+        }
+
+        function buildSolutionHTML(a, b, c, d) {
+            const aF = Fraction.fromInt(a), bF = Fraction.fromInt(b), cF = Fraction.fromInt(c), dF = Fraction.fromInt(d);
+            const a3 = aF.mul(new Fraction(1, 3));
+            const b2 = bF.mul(new Fraction(1, 2));
+            const C = dF.sub(a3.mul(cF.pow(3))).sub(b2.mul(cF.pow(2)));
+
+            const root1F = Fraction.fromInt(0);
+            const root2F = new Fraction(-b, a);
+            
+            let roots = [root1F, root2F].sort((r1, r2) => r1.valueOf() - r2.valueOf());
+            const x1 = roots[0], x2 = roots[1];
+            
+            const F_funcF = xF => a3.mul(xF.pow(3)).add(b2.mul(xF.pow(2))).add(C);
+            const Fx1 = F_funcF(x1), Fx2 = F_funcF(x2);
+
+            // Logique d'affichage dynamique pour le CSS du tableau HTML
+            const limInf = a > 0 ? "-\\infty" : "+\\infty";
+            const limSup = a > 0 ? "+\\infty" : "-\\infty";
+
+            const class1 = a > 0 ? "val-bot" : "val-top";
+            const class2 = a > 0 ? "val-top" : "val-bot";
+            const class3 = a > 0 ? "val-bot" : "val-top";
+            const class4 = a > 0 ? "val-top" : "val-bot";
+
+            const arr1 = a > 0 ? "\\nearrow" : "\\searrow";
+            const arr2 = a > 0 ? "\\searrow" : "\\nearrow";
+            const arr3 = a > 0 ? "\\nearrow" : "\\searrow";
+
+            const sign1 = a > 0 ? "+" : "-";
+            const sign2 = a > 0 ? "-" : "+";
+            const sign3 = a > 0 ? "+" : "-";
+
+            // Structure HTML pure reproduisant l'apparence tkz-tab
+            const varTable = `
+            <div class="table-container">
+                <table class="tkz-table">
+                    <tr>
+                        <td class="label-col">\\(x\\)</td>
+                        <td>\\(-\\infty\\)</td>
+                        <td></td>
+                        <td>\\(${x1.toString()}\\)</td>
+                        <td></td>
+                        <td>\\(${x2.toString()}\\)</td>
+                        <td></td>
+                        <td>\\(+\\infty\\)</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">\\(f(x)\\)</td>
+                        <td></td>
+                        <td>\\(${sign1}\\)</td>
+                        <td>\\(0\\)</td>
+                        <td>\\(${sign2}\\)</td>
+                        <td>\\(0\\)</td>
+                        <td>\\(${sign3}\\)</td>
+                        <td></td>
+                    </tr>
+                    <tr class="row-variations">
+                        <td class="label-col">\\(F(x)\\)</td>
+                        <td class="${class1}">\\(${limInf}\\)</td>
+                        <td class="cell-arrow">\\(${arr1}\\)</td>
+                        <td class="${class2}">\\(${Fx1.toString()}\\)</td>
+                        <td class="cell-arrow">\\(${arr2}\\)</td>
+                        <td class="${class3}">\\(${Fx2.toString()}\\)</td>
+                        <td class="cell-arrow">\\(${arr3}\\)</td>
+                        <td class="${class4}">\\(${limSup}\\)</td>
+                    </tr>
+                </table>
+            </div>`;
+
+            return `
+            <div class="step step-pedagogy">
+                <strong>📝 Rappels de cours et méthodes</strong>
+                <ul>
+                    <li><strong>Définition d'une primitive :</strong> Soit \\(f\\) une fonction continue sur un intervalle \\(I\\). On appelle primitive de \\(f\\) sur \\(I\\), toute fonction \\(F\\) dérivable sur \\(I\\) telle que pour tout \\(x \\in I\\), on ait \\(F'(x) = f(x)\\).</li>
+                    <li><strong>Théorème des variations :</strong> Les variations de la fonction \\(F\\) se déduisent rigoureusement du signe de sa dérivée \\(F'\\) (qui est ici la fonction \\(f\\)).
+                        <ul>
+                            <li>Si \\(f(x) > 0\\) sur un intervalle, alors \\(F\\) est strictement croissante.</li>
+                            <li>Si \\(f(x) < 0\\) sur un intervalle, alors \\(F\\) est strictement décroissante.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Propriété du trinôme :</strong> Un polynôme du second degré \\(ax^2+bx+c\\) est du signe de \\(a\\) à l'extérieur de ses racines, et du signe opposé à \\(a\\) entre ses racines.</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <strong>1. Lien entre \\(f\\) et \\(F'\\)</strong>
+                <p>Puisque \\(F\\) est la primitive de \\(f\\), nous savons d'après le cours que :</p>
+                <p>\\[ F'(x) = f(x) = ${formatFx(a, b)} \\]</p>
+                <p>Étudier les variations de \\(F\\) revient donc à étudier le signe de \\(f(x)\\).</p>
+            </div>
+
+            <div class="step">
+                <strong>2. Recherche des racines et signe de \\(f(x)\\)</strong>
+                <p>On cherche les valeurs de \\(x\\) pour lesquelles \\(f(x) = 0\\).</p>
+                <p>Ici, on peut factoriser facilement : \\(f(x) = x(${a}x ${b > 0 ? '+' : '-'} ${Math.abs(b)})\\).</p>
+                <p>Les racines sont donc la solution de l'équation produit nul :</p>
+                <ul>
+                    <li>\\(x = 0\\)</li>
+                    <li>\\(${a}x ${b > 0 ? '+' : '-'} ${Math.abs(b)} = 0 \\iff x = \\dfrac{${-b}}{${a}} = ${root2F.toString()}\\)</li>
+                </ul>
+                <p>Le coefficient de \\(x^2\\) est \\(a = ${a}\\), qui est ${a > 0 ? 'positif' : 'négatif'}. D'après la règle du signe d'un trinôme, \\(f(x)\\) sera ${a > 0 ? 'positive' : 'négative'} à l'extérieur des racines et ${a > 0 ? 'négative' : 'positive'} entre les racines.</p>
+            </div>
+
+            <div class="step">
+                <strong>3. Tableau de variations de \\(F\\)</strong>
+                <p>En appliquant le théorème des variations rappelé précédemment, on dresse le tableau exact :</p>
+                ${varTable}
+            </div>
+
+            <div class="step">
+                <strong>4. Détermination analytique de la primitive \\(F\\) et de la constante \\(C\\)</strong>
+                <p>L'ensemble des primitives de \\(f(x) = ${formatFx(a, b)}\\) s'écrit, en intégrant terme à terme :</p>
+                <p>\\[ F(x) = ${a3.toString()}x^3 + ${b2.toString()}x^2 + C \\]</p>
+                <p>On utilise la condition initiale donnée dans l'énoncé : \\(F(${c}) = ${d}\\).</p>
+                <p>En remplaçant \\(x\\) par \\(${c}\\), on obtient l'équation :</p>
+                <p>\\[ ${a3.toString()}(${c})^3 + ${b2.toString()}(${c})^2 + C = ${d} \\]</p>
+                <p>Après simplification, l'équation devient :</p>
+                <p>\\[ ${a3.mul(cF.pow(3)).add(b2.mul(cF.pow(2))).toString()} + C = ${d} \\iff C = ${C.toString()} \\]</p>
+                <p>L'expression finale et unique de la primitive recherchée est donc :</p>
+                <p>\\[ F(x) = ${a3.toString()}x^3 + ${b2.toString()}x^2 ${C.num >= 0 ? '+' : ''} ${C.toString()} \\]</p>
+            </div>`;
+        }
+
+        function drawGraph() {
+            const {a, b, c, d} = params;
+            const aF = Fraction.fromInt(a), bF = Fraction.fromInt(b), cF = Fraction.fromInt(c), dF = Fraction.fromInt(d);
+            const a3 = aF.mul(new Fraction(1, 3));
+            const b2 = bF.mul(new Fraction(1, 2));
+            const C = dF.sub(a3.mul(cF.pow(3))).sub(b2.mul(cF.pow(2)));
+            
+            const f = x => a*x**2 + b*x;
+            const F = x => (a/3)*x**3 + (b/2)*x**2 + C.valueOf();
+
+            ctx.clearRect(0, 0, 800, 500);
+            const xMin = -7, xMax = 7, yMin = -20, yMax = 20;
+            const toX = x => 60 + (x - xMin) * 680 / (xMax - xMin);
+            const toY = y => 40 + (yMax - y) * 420 / (yMax - yMin);
+
+            ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1; ctx.beginPath();
+            for(let i=xMin; i<=xMax; i++) { ctx.moveTo(toX(i), 40); ctx.lineTo(toX(i), 460); }
+            for(let i=yMin; i<=yMax; i+=5) { ctx.moveTo(60, toY(i)); ctx.lineTo(740, toY(i)); }
+            ctx.stroke();
+
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2; ctx.beginPath();
+            ctx.moveTo(60, toY(0)); ctx.lineTo(740, toY(0));
+            ctx.moveTo(toX(0), 40); ctx.lineTo(toX(0), 460); ctx.stroke();
+
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = accessibleMode ? 4 : 2; ctx.beginPath();
+            for(let x=xMin; x<=xMax; x+=0.05) {
+                const y = f(x); if(x === xMin) ctx.moveTo(toX(x), toY(y)); else ctx.lineTo(toX(x), toY(y));
+            }
+            ctx.stroke();
+
+            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = accessibleMode ? 5 : 3; ctx.beginPath();
+            for(let x=xMin; x<=xMax; x+=0.05) {
+                const y = F(x); if(x === xMin) ctx.moveTo(toX(x), toY(y)); else ctx.lineTo(toX(x), toY(y));
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = '#1e293b'; ctx.beginPath();
+            ctx.arc(toX(c), toY(d), accessibleMode ? 8 : 6, 0, 7); ctx.fill();
+            ctx.font = accessibleMode ? "bold 18px Comic Sans MS" : "bold 13px Inter";
+            ctx.fillText(`F(${c})=${d}`, toX(c)+10, toY(d)-10);
+        }
+
+        function refresh() {
+            params = generateParams();
+            probBox.innerHTML = `Soit la fonction \\(f\\) définie sur \\(\\mathbb{R}\\) par \\(f(x)=${formatFx(params.a, params.b)}\\).<br><br><strong>Objectif :</strong> Déterminer analytiquement les variations de \\(F\\), l'unique primitive de \\(f\\) vérifiant la condition initiale \\(F(${params.c})=${params.d}\\).`;
+            
+            solSteps.innerHTML = buildSolutionHTML(params.a, params.b, params.c, params.d);
+            solutionVisible = false;
+            solContainer.classList.add('visually-hidden');
+            toggleBtn.textContent = '🔍 Afficher la correction';
+            
+            document.getElementById('ans-r1').value = '';
+            document.getElementById('ans-r2').value = '';
+            document.getElementById('ans-c').value = '';
+
+            MathJax.typesetPromise();
+        }
+
+        function downloadJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function parseFrac(s) {
+            if(!s) return NaN;
+            s = s.replace(',', '.');
+            if(s.includes('/')) {
+                const p = s.split('/');
+                return parseFloat(p[0]) / parseFloat(p[1]);
+            }
+            return parseFloat(s);
+        }
+
+        document.getElementById('generate-json-btn').onclick = () => {
+            const r1Str = document.getElementById('ans-r1').value.trim();
+            const r2Str = document.getElementById('ans-r2').value.trim();
+            const cStr = document.getElementById('ans-c').value.trim();
+
+            const r1 = parseFrac(r1Str);
+            const r2 = parseFrac(r2Str);
+            const cVal = parseFrac(cStr);
+
+            const x1_val = 0;
+            const x2_val = -params.b / params.a;
+            let roots = [x1_val, x2_val].sort((x, y) => x - y);
+            
+            const aF = Fraction.fromInt(params.a), bF = Fraction.fromInt(params.b), cF = Fraction.fromInt(params.c), dF = Fraction.fromInt(params.d);
+            const C_exact = dF.sub(aF.mul(new Fraction(1, 3)).mul(cF.pow(3))).sub(bF.mul(new Fraction(1, 2)).mul(cF.pow(2))).valueOf();
+
+            let erreurs = [];
+            if (isNaN(r1) || Math.abs(r1 - roots[0]) > 0.001) erreurs.push(`Racine 1 fausse ou manquante`);
+            if (isNaN(r2) || Math.abs(r2 - roots[1]) > 0.001) erreurs.push(`Racine 2 fausse ou manquante`);
+            if (isNaN(cVal) || Math.abs(cVal - C_exact) > 0.001) erreurs.push(`Constante C fausse ou manquante`);
+
+            const rapport = {
+                date_exercice: new Date().toISOString(),
+                sujet: {
+                    fonction: formatFx(params.a, params.b),
+                    condition_initiale: `F(${params.c})=${params.d}`
+                },
+                saisie_eleve_brute: { racine1: r1Str, racine2: r2Str, constante_C: cStr },
+                saisie_eleve_evaluee: { racine1: r1, racine2: r2, constante_C: cVal },
+                bilan_erreurs: erreurs,
+                statut: erreurs.length === 0 ? "Réussite complète" : "À revoir"
+            };
+
+            downloadJSON(rapport, `reponses_eleve_${Date.now()}.json`);
+            alert("Fichier JSON généré et téléchargé avec succès !");
+        };
+
+        dysBtn.onclick = () => {
+            accessibleMode = !accessibleMode;
+            document.body.classList.toggle('accessible-mode');
+            dysBtn.classList.toggle('active');
+            if(solutionVisible) drawGraph();
+        };
+
+        toggleBtn.onclick = () => {
+            solutionVisible = !solutionVisible;
+            if(solutionVisible) {
+                solContainer.classList.remove('visually-hidden');
+                toggleBtn.textContent = '🙈 Cacher la correction';
+                drawGraph();
+            } else {
+                solContainer.classList.add('visually-hidden');
+                toggleBtn.textContent = '🔍 Afficher la correction';
+            }
+        };
+
+        document.getElementById('new-problem-btn').onclick = refresh;
+        
+        document.getElementById('copyright-btn').onclick = () => {
+            document.getElementById('copyright-text').innerHTML = `
+                <h2 style="margin-bottom:1.5rem; color: #1e293b;">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+                <p style="margin-bottom: 1rem;"><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Mai 2026</p>
+                <p style="margin-bottom: 1rem; color: #4f46e5; font-weight: bold;">Licence d'Utilisation Non Commerciale</p>
+                <p style="margin-bottom: 1rem;">Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Exercice dynamique sur les variations d'une primitive') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+                <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 8px;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Conditions :</strong></p>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                        <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                    </ul>
+                    <p style="margin-bottom: 0.5rem;"><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</p>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: #64748b;">Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+            `;
+            document.getElementById('copyright-modal').style.display = 'flex';
+        };
+        
+        document.getElementById('close-modal').onclick = () => document.getElementById('copyright-modal').style.display = 'none';
+
+        refresh();
+    })();
+</script>
+</body>
+</html>
